@@ -1,4 +1,4 @@
-//models/Transaction.js
+// models/Transaction.js
 const mongoose = require('mongoose');
 
 const TransactionSchema = new mongoose.Schema({
@@ -11,6 +11,12 @@ const TransactionSchema = new mongoose.Schema({
     type: Number,
     required: [true, 'Original service price is required'],
     min: [0, 'Price must be positive'],
+  },
+  // NEW: always store the computed final price; do NOT overwrite originalPrice
+  finalPrice: {
+    type: Number,
+    min: 0,
+    default: 0,
   },
   discountAmount: {
     type: Number,
@@ -34,7 +40,7 @@ const TransactionSchema = new mongoose.Schema({
   },
   paymentMethod: {
     type: String,
-    enum: ['Cash', 'Card', 'Mobile Payment'],
+    enum: ['Cash', 'Mobile Payment'],
     required: [true, 'Payment method is required'],
   },
   vehicleDetails: {
@@ -46,6 +52,12 @@ const TransactionSchema = new mongoose.Schema({
     type: String,
     trim: true,
     required: [true, 'Customer or company name is required'],
+  },
+  // Optional: store the receipt email so you have a record
+  email: {
+    type: String,
+    trim: true,
+    lowercase: true,
   },
   notes: {
     type: String,
@@ -69,25 +81,44 @@ const TransactionSchema = new mongoose.Schema({
   timestamps: true,
 });
 
-TransactionSchema.pre('save', function (next) {
-  const percentDiscount = (this.discountPercent || 0) / 100;
-  const discountFromPercent = this.originalPrice * percentDiscount;
-  const totalDiscount = discountFromPercent + (this.discountAmount || 0);
+// ---- helpers ----
+function computeFinal(originalPrice = 0, discountPercent = 0, discountAmount = 0) {
+  const pct = (Number(discountPercent) || 0) / 100;
+  const discountFromPercent = (Number(originalPrice) || 0) * pct;
+  const totalDiscount = discountFromPercent + (Number(discountAmount) || 0);
+  const final = Math.max(0, (Number(originalPrice) || 0) - totalDiscount);
+  return Number(final.toFixed(2));
+}
 
-  // Final price
-  const finalPrice = Math.max(0, this.originalPrice - totalDiscount);
-  this.originalPrice = parseFloat(finalPrice.toFixed(2));
-
-  // Human-readable discount label
+function buildDiscountLabel(discountPercent = 0, discountAmount = 0) {
   let label = '';
-  if (this.discountPercent) label += `${this.discountPercent}%`;
-  if (this.discountAmount) {
+  if (discountPercent) label += `${discountPercent}%`;
+  if (discountAmount) {
     if (label) label += ' + ';
-    label += `$${this.discountAmount} off`;
+    label += `$${discountAmount} off`;
   }
-  this.discountLabel = label || 'No discount';
+  return label || 'No discount';
+}
 
+// Runs on single-doc saves (create/update via .save())
+TransactionSchema.pre('save', function (next) {
+  this.finalPrice = computeFinal(this.originalPrice, this.discountPercent, this.discountAmount);
+  this.discountLabel = buildDiscountLabel(this.discountPercent, this.discountAmount);
   next();
 });
+
+// Runs on batch inserts (insertMany does NOT trigger 'save' middleware)
+TransactionSchema.pre('insertMany', function (next, docs) {
+  if (Array.isArray(docs)) {
+    for (const d of docs) {
+      d.finalPrice = computeFinal(d.originalPrice, d.discountPercent, d.discountAmount);
+      d.discountLabel = buildDiscountLabel(d.discountPercent, d.discountAmount);
+    }
+  }
+  next();
+});
+
+// Optional: index by date for faster recent queries
+TransactionSchema.index({ serviceDate: -1, createdAt: -1 });
 
 module.exports = mongoose.model('Transaction', TransactionSchema);

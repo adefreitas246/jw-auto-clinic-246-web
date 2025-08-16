@@ -1,18 +1,16 @@
+// routes/auth.js
 const express = require('express');
 const jwt = require('jsonwebtoken');
-const User = require('../models/Users');
-const Employee = require('../models/Employees');
-const router = express.Router();
 const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 
-const nodemailer = require('nodemailer');
+const User = require('../models/Users');
+const Employee = require('../models/Employees');
+const PasswordResetToken = require('../models/PasswordResetToken');
 const sendEmail = require('../utils/sendEmail');
 
+const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'dev_secret_key';
-
-// Temporary in-memory token store (for demo)
-const resetTokens = {};
 
 // POST /api/auth/register (User only)
 router.post('/register', async (req, res) => {
@@ -29,10 +27,13 @@ router.post('/register', async (req, res) => {
 // POST /api/auth/login (User or Employee)
 router.post('/login', async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email = '', password = '' } = req.body;
 
-    // Try User model first
-    let user = await User.findOne({ email });
+    // Normalise once
+    const normalizedEmail = email.trim().toLowerCase();
+
+    // Try User first
+    let user = await User.findOne({ email: normalizedEmail });
     if (user && (await user.comparePassword(password))) {
       const token = jwt.sign(
         { userId: user._id, role: user.role, name: user.name, type: 'User' },
@@ -49,8 +50,8 @@ router.post('/login', async (req, res) => {
       });
     }
 
-    // Try Employee model next
-    const employee = await Employee.findOne({ email });
+    // Then Employee
+    const employee = await Employee.findOne({ email: normalizedEmail });
     if (employee && (await employee.comparePassword(password))) {
       const token = jwt.sign(
         { userId: employee._id, role: employee.role, name: employee.name, type: 'Employee' },
@@ -69,10 +70,10 @@ router.post('/login', async (req, res) => {
 
     return res.status(401).json({ error: 'Invalid credentials' });
   } catch (err) {
+    console.error('Login error:', err);
     res.status(500).json({ error: 'Server error' });
   }
 });
-
 
 // POST /api/auth/forgot-password (User or Employee)
 router.post('/forgot-password', async (req, res) => {
@@ -80,62 +81,91 @@ router.post('/forgot-password', async (req, res) => {
   if (!email) return res.status(400).json({ error: 'Email is required' });
 
   try {
-    const user = await User.findOne({ email });
-    if (!user) return res.status(404).json({ error: 'User not found' });
+    // Find account in either collection
+    let account = await User.findOne({ email });
+    let accountType = 'User';
+    if (!account) {
+      account = await Employee.findOne({ email });
+      accountType = account ? 'Employee' : null;
+    }
 
-    const token = crypto.randomBytes(32).toString('hex');
-    resetTokens[token] = {
-      userId: user._id,
-      expires: Date.now() + 15 * 60 * 1000,
-    };
+    // Always return the same response (avoid enumeration)
+    if (!account) {
+      return res.json({ message: 'If this email exists, a reset link has been sent.' });
+    }
 
-    const resetUrl = `http://192.168.1.29:8081/auth/reset-password?token=${token}`;
+    // Invalidate previous tokens for this account
+    await PasswordResetToken.deleteMany({ accountId: account._id, accountType });
+
+    // Create a new raw token and store only the hash
+    const rawToken = crypto.randomBytes(32).toString('hex');
+    const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
+    const expiresAt = new Date(Date.now() + 30 * 60 * 1000); // 30 minutes
+
+    await PasswordResetToken.create({
+      accountId: account._id,
+      accountType,
+      tokenHash,
+      expiresAt,
+    });
+
+    // Build app deep link (configure APP_RESET_LINK_BASE in your env)
+    const base = process.env.APP_RESET_LINK_BASE || 'jwautoclinic246://auth/reset-password';
+    const resetUrl = `${base}?token=${encodeURIComponent(rawToken)}`;
 
     await sendEmail({
       to: email,
       subject: 'Password Reset',
       html: `
         <p>Hello,</p>
-        <p>You requested a password reset. Click the link below:</p>
-        <a href="${resetUrl}">${resetUrl}</a>
-        <p>This link will expire in 15 minutes.</p>
+        <p>You requested a password reset. Click the link below to set a new password:</p>
+        <p><a href="${resetUrl}">${resetUrl}</a></p>
+        <p>This link will expire in 30 minutes and can only be used once.</p>
       `,
     });
 
-    res.json({ message: 'Reset link sent to your email.' });
+    return res.json({ message: 'If this email exists, a reset link has been sent.' });
   } catch (err) {
-    console.error('SMTP error:', err);
-    res.status(500).json({ error: 'Server error while sending email' });
+    console.error('Forgot Password Error:', err);
+    res.status(500).json({ error: 'Server error while sending reset link.' });
   }
 });
 
 
+// POST /api/auth/reset-password (User or Employee)
 router.post('/reset-password', async (req, res) => {
   const { token, password } = req.body;
-
   if (!token || !password) {
     return res.status(400).json({ error: 'Token and new password are required.' });
   }
 
-  const record = resetTokens[token];
-
-  if (!record || record.expires < Date.now()) {
-    return res.status(400).json({ error: 'Reset token is invalid or has expired.' });
-  }
-
   try {
-    const user = await User.findById(record.userId);
-    if (!user) {
-      delete resetTokens[token];
-      return res.status(404).json({ error: 'User not found.' });
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+    const record = await PasswordResetToken.findOne({ tokenHash });
+
+    if (!record) return res.status(400).json({ error: 'Reset token is invalid.' });
+    if (record.usedAt) return res.status(400).json({ error: 'Reset token has already been used.' });
+    if (record.expiresAt < new Date()) return res.status(400).json({ error: 'Reset token has expired.' });
+
+    // Load account by type
+    let account = null;
+    if (record.accountType === 'User') account = await User.findById(record.accountId);
+    if (record.accountType === 'Employee') account = await Employee.findById(record.accountId);
+    if (!account) {
+      await PasswordResetToken.deleteOne({ _id: record._id });
+      return res.status(404).json({ error: 'Account not found.' });
     }
 
-    user.password = password; // plain password — let schema hash it
-    await user.save();        // schema will hash it using pre-save hook
+    // Set new password; the model's pre('save') will hash
+    account.password = password;
+    await account.save();
 
-    delete resetTokens[token];
+    // Mark token used and purge old tokens
+    record.usedAt = new Date();
+    await record.save();
+    await PasswordResetToken.deleteMany({ accountId: record.accountId, accountType: record.accountType });
 
-    res.json({ message: 'Password reset successful. You can now log in.' });
+    return res.json({ message: 'Password reset successful. You can now log in.' });
   } catch (err) {
     console.error('Reset Password Error:', err);
     res.status(500).json({ error: 'Server error while resetting password.' });

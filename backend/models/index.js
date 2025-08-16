@@ -6,7 +6,7 @@ const Customer = require('./Customer');
 const Shift = require('./Shift');
 const Services = require('./Services');
 const Specials = require('./Specials');
-
+const PasswordResetToken = require('./PasswordResetToken');
 
 // Add more models here as needed, e.g.:
 // const Appointment = require('./Appointment');
@@ -20,6 +20,7 @@ module.exports = {
   Shift,
   Services,
   Specials,
+  PasswordResetToken,
   // Appointment,
   // ShiftLog,
 };

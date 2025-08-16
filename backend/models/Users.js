@@ -4,20 +4,39 @@ const bcrypt = require('bcrypt');
 
 const UserSchema = new mongoose.Schema({
   name: { type: String, required: true },
-  email: { type: String, required: true, unique: true },
+  email: { type: String, required: true, unique: true, trim: true, lowercase: true },
   password: { type: String, required: true },
-  phone: { type: String, trim: true }, // new
-  avatar: { type: String }, // new (base64 or image URL)
-  notificationsEnabled: { type: Boolean, default: true }, // new
-  role: { type: String, enum: ['admin', 'staff'], default: 'staff' },
-}, {
-  timestamps: true
-});
+  phone: { type: String, trim: true },
+  avatar: { type: String },
+  notificationsEnabled: { type: Boolean, default: true },
+  role: { type: String },
+}, { timestamps: true });
+
+async function hashIfNeeded(doc) {
+  const salt = await bcrypt.genSalt(10);
+  return bcrypt.hash(doc.password, salt);
+}
 
 UserSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();
-  this.password = await bcrypt.hash(this.password, 10);
+  this.password = await hashIfNeeded({ password: this.password });
   next();
+});
+
+UserSchema.pre('findOneAndUpdate', async function (next) {
+  try {
+    const update = this.getUpdate() || {};
+    const nextPwd = update.password ?? update.$set?.password;
+    if (nextPwd) {
+      const hashed = await hashIfNeeded({ password: nextPwd });
+      if (update.$set?.password) update.$set.password = hashed;
+      else update.password = hashed;
+      this.setUpdate(update);
+    }
+    next();
+  } catch (err) {
+    next(err);
+  }
 });
 
 UserSchema.methods.comparePassword = function (candidatePassword) {

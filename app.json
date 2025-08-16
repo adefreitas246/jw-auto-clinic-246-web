@@ -2,26 +2,48 @@
   "expo": {
     "name": "JW Auto Clinic",
     "slug": "jw-auto-clinic",
-    "extra": {
-      "apiUrl": "https://jw-auto-clinic-246.onrender.com"
-    },
     "platforms": [
       "ios",
       "android",
       "web"
     ],
-    "version": "1.0.0",
-    "orientation": "portrait",
+    "version": "1.2.0",
+    "date": "2025-08-12",
+    "changes": [
+      {
+        "type": "New",
+        "text": "Support form on Settings."
+      },
+      {
+        "type": "Improved",
+        "text": "Faster employee list loading."
+      }
+    ],
+    "orientation": "default",
     "icon": "./assets/images/splash-icon-light.png",
-    "scheme": "jwautoclinic",
+    "scheme": "jwautoclinic246",
+    "deeplinks": [
+      "jwautoclinic246://"
+    ],
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "runtimeVersion": "1.2.0",
+    "updates": {
+      "enabled": true,
+      "url": "https://u.expo.dev/565ab218-7160-484c-b79b-78b85ae9409b",
+      "checkOnLaunch": "ALWAYS",
+      "channel": "production"
+    },
     "ios": {
       "supportsTablet": true,
       "icon": {
         "dark": "./assets/icons/ios-dark.png",
         "light": "./assets/icons/ios-light.png",
         "tinted": "./assets/icons/ios-tinted.png"
+      },
+      "bundleIdentifier": "com.adefreitas.jwautoclinic",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
@@ -29,9 +51,24 @@
         "foregroundImage": "./assets/icons/adaptive-icon.png",
         "monochromeImage": "./assets/icons/adaptive-icon.png",
         "backgroundImage": "./assets/icons/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#ffffff",
+        "intentFilters": [
+          {
+            "action": "VIEW",
+            "data": [
+              {
+                "scheme": "jwautoclinic"
+              }
+            ],
+            "category": [
+              "BROWSABLE",
+              "DEFAULT"
+            ]
+          }
+        ]
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "versionCode": 3
     },
     "web": {
       "bundler": "metro",
@@ -48,10 +85,19 @@
           "imageWidth": 200
         }
       ],
-      "expo-mail-composer"
+      "expo-mail-composer",
+      "expo-router",
+      "expo-updates"
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "565ab218-7160-484c-b79b-78b85ae9409b"
+      }
+    },
+    "owner": "adefreitas"
   }
 }

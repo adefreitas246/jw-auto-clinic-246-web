@@ -1,49 +1,76 @@
+// models/Employees.js
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 
 const employeeSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
-    email: String,
-    phone: String,
-    role: {
-      type: String,
-      enum: ['admin', 'staff'],
-      default: 'Staff',
-    },
+    email: { type: String, trim: true, lowercase: true, required: true, index: true },
+    phone: { type: String, trim: true },
+    avatar: { type: String },
+    role: { type: String, enum: ['admin', 'staff'], default: 'staff' },
     hourlyRate: { type: Number, default: 0 },
     clockedIn: { type: Boolean, default: false },
-    password: { type: String},
-    createdBy: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
-    },
+    password: { type: String },
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   },
   { timestamps: true }
 );
 
-// ADD THIS BELOW THE SCHEMA
+// helper
+async function hashPassword(plain) {
+  const salt = await bcrypt.genSalt(10);
+  return bcrypt.hash(plain, salt);
+}
+
+// Create: default + hash
 employeeSchema.pre('save', async function (next) {
-  // Only set default if no password provided
-  if (!this.password) {
-    this.password = this.role === 'Admin' ? 'Jw@admin1!' : 'Jw@staff1!';
-  }
-
-  // Hash only if password is not already hashed
-  if (!this.isModified('password')) return next();
-
   try {
-    const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt);
+    if (!this.password) {
+      this.password = this.role === 'admin' ? 'Jw@admin1!' : 'Jw@staff1!';
+    }
+    if (!this.isModified('password')) return next();
+    this.password = await hashPassword(this.password);
     next();
   } catch (err) {
-    return next(err);
+    next(err);
   }
 });
 
-// OPTIONAL: Add a method for comparing passwords later
-employeeSchema.methods.comparePassword = function (enteredPassword) {
-  return bcrypt.compare(enteredPassword, this.password);
+// Update: hash if password provided via findOneAndUpdate
+employeeSchema.pre('findOneAndUpdate', async function (next) {
+  try {
+    const update = this.getUpdate() || {};
+    const nextPwd = update.password ?? update.$set?.password;
+    if (nextPwd) {
+      const hashed = await hashPassword(nextPwd);
+      if (update.$set?.password) update.$set.password = hashed;
+      else update.password = hashed;
+      this.setUpdate(update);
+    }
+    next();
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Compare with legacy fallback + auto-upgrade
+employeeSchema.methods.comparePassword = async function (enteredPassword) {
+  const stored = this.password || '';
+
+  // If it looks like a bcrypt hash, compare normally
+  if (/^\$2[aby]\$/.test(stored)) {
+    return bcrypt.compare(enteredPassword, stored);
+  }
+
+  // Legacy plaintext fallback
+  if (enteredPassword === stored) {
+    // transparently upgrade to hashed
+    this.password = await hashPassword(enteredPassword);
+    await this.save();
+    return true;
+  }
+  return false;
 };
 
 module.exports = mongoose.model('Employee', employeeSchema);
