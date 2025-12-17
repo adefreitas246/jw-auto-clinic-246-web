@@ -1,0 +1,278 @@
+[{
+  "_id": {
+    "$oid": "686e958ee9b7ea3b1d264f47"
+  },
+  "serviceType": "Basic Wash",
+  "servicePrice": 18,
+  "paymentMethod": "Cash",
+  "employeeName": "John Doe",
+  "vehicleDetails": "White Mazda 3 Alexa",
+  "customerName": "Jane Smith",
+  "notes": "New customer",
+  "customer": {
+    "$oid": "686e958ee9b7ea3b1d264f45"
+  },
+  "createdBy": {
+    "$oid": "686caf9220e5a4bb1d2feabf"
+  },
+  "serviceDate": {
+    "$date": "2025-07-09T16:15:10.668Z"
+  },
+  "createdAt": {
+    "$date": "2025-07-09T16:15:10.669Z"
+  },
+  "updatedAt": {
+    "$date": "2025-07-09T16:15:10.669Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "686e9613e9b7ea3b1d264f4a"
+  },
+  "serviceType": "Basic Wash",
+  "servicePrice": 18,
+  "paymentMethod": "Cash",
+  "employeeName": "John Doe",
+  "vehicleDetails": "White Mazda 3 Alexa",
+  "customerName": "Jane Smith",
+  "notes": "New customer",
+  "customer": {
+    "$oid": "686e958ee9b7ea3b1d264f45"
+  },
+  "createdBy": {
+    "$oid": "686caf9220e5a4bb1d2feabf"
+  },
+  "serviceDate": {
+    "$date": "2025-07-09T16:17:23.210Z"
+  },
+  "createdAt": {
+    "$date": "2025-07-09T16:17:23.210Z"
+  },
+  "updatedAt": {
+    "$date": "2025-07-09T16:17:23.210Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "686e9e17946b5cfaaa947788"
+  },
+  "serviceType": "Premium Wash",
+  "servicePrice": 50,
+  "paymentMethod": "Mobile Payment",
+  "employeeName": "John Doe",
+  "vehicleDetails": "Grey Tesla X",
+  "customerName": "Jane Smith",
+  "notes": "New customer.",
+  "customer": {
+    "$oid": "686e9e16946b5cfaaa947786"
+  },
+  "createdBy": {
+    "$oid": "686caf9220e5a4bb1d2feabf"
+  },
+  "serviceDate": {
+    "$date": "2025-07-09T16:51:35.106Z"
+  },
+  "createdAt": {
+    "$date": "2025-07-09T16:51:35.106Z"
+  },
+  "updatedAt": {
+    "$date": "2025-07-09T16:51:35.106Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "686f1a0e946b5cfaaa9477ce"
+  },
+  "serviceType": "Detailing",
+  "servicePrice": 100,
+  "paymentMethod": "Cash",
+  "employeeName": "Richard King",
+  "vehicleDetails": "Blue Yaris Hybrid",
+  "customerName": "Chris Scott",
+  "notes": "Previous customer.",
+  "customer": {
+    "$oid": "686f1a0e946b5cfaaa9477cc"
+  },
+  "createdBy": {
+    "$oid": "686caf9220e5a4bb1d2feac1"
+  },
+  "serviceDate": {
+    "$date": "2025-07-10T01:40:30.475Z"
+  },
+  "createdAt": {
+    "$date": "2025-07-10T01:40:30.475Z"
+  },
+  "updatedAt": {
+    "$date": "2025-07-10T01:40:30.475Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "686f22c1946b5cfaaa94784f"
+  },
+  "serviceType": "Wax & Polish",
+  "servicePrice": 75,
+  "paymentMethod": "Mobile Payment",
+  "employeeName": "Adde Defreitas",
+  "vehicleDetails": "Yaris 2021 white",
+  "customerName": "Lyn-Marie Defreitas",
+  "notes": "",
+  "customer": {
+    "$oid": "686f22c1946b5cfaaa94784d"
+  },
+  "createdBy": {
+    "$oid": "686caf9220e5a4bb1d2feabf"
+  },
+  "serviceDate": {
+    "$date": "2025-07-10T02:17:37.726Z"
+  },
+  "createdAt": {
+    "$date": "2025-07-10T02:17:37.727Z"
+  },
+  "updatedAt": {
+    "$date": "2025-07-10T02:17:37.727Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6870563feb3556db613e1a3c"
+  },
+  "serviceType": "Exterior Only",
+  "servicePrice": 15,
+  "paymentMethod": "Cash",
+  "employeeName": "Mark Greene",
+  "vehicleDetails": "Blue Tesla S",
+  "customerName": "Joshua Burns",
+  "notes": "New customer.",
+  "customer": {
+    "$oid": "6870563feb3556db613e1a3a"
+  },
+  "createdBy": {
+    "$oid": "686caf9220e5a4bb1d2feabf"
+  },
+  "serviceDate": {
+    "$date": "2025-07-11T00:09:35.221Z"
+  },
+  "createdAt": {
+    "$date": "2025-07-11T00:09:35.222Z"
+  },
+  "updatedAt": {
+    "$date": "2025-07-11T00:09:35.222Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "687058abeb3556db613e1a83"
+  },
+  "serviceType": "Detailing",
+  "servicePrice": 100,
+  "paymentMethod": "Card",
+  "employeeName": "Addé Defreitas",
+  "vehicleDetails": "Red Suzuki Swift",
+  "customerName": "Mclita King",
+  "notes": "Long term customer.",
+  "customer": {
+    "$oid": "687058a1eb3556db613e1a7f"
+  },
+  "createdBy": {
+    "$oid": "686caf9220e5a4bb1d2feabf"
+  },
+  "serviceDate": {
+    "$date": "2025-07-11T00:19:55.676Z"
+  },
+  "createdAt": {
+    "$date": "2025-07-11T00:19:55.676Z"
+  },
+  "updatedAt": {
+    "$date": "2025-07-11T00:19:55.676Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "687469fa856a5bacae9d0502"
+  },
+  "serviceType": "Full Service",
+  "servicePrice": 85,
+  "paymentMethod": "Mobile Payment",
+  "employeeName": "Eddy Goldberg",
+  "vehicleDetails": "Black Honda Sport",
+  "customerName": "Addé Defreitas",
+  "notes": "Testing bad knocking sound.",
+  "customer": {
+    "$oid": "687469fa856a5bacae9d04e7"
+  },
+  "createdBy": {
+    "$oid": "686caf9220e5a4bb1d2feabf"
+  },
+  "serviceDate": {
+    "$date": "2025-07-14T02:22:50.803Z"
+  },
+  "createdAt": {
+    "$date": "2025-07-14T02:22:50.804Z"
+  },
+  "updatedAt": {
+    "$date": "2025-07-14T02:22:50.804Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "68759d46b9972315f1b1a4df"
+  },
+  "serviceType": "Premium Wash",
+  "servicePrice": 45,
+  "paymentMethod": "Cash",
+  "vehicleDetails": "Red Tesla S Model",
+  "customerName": "Adde Defreitas",
+  "notes": "Electrical engine clean.",
+  "customer": {
+    "$oid": "68759d46b9972315f1b1a4dd"
+  },
+  "createdBy": {
+    "$oid": "686caf9220e5a4bb1d2feabf"
+  },
+  "serviceDate": {
+    "$date": "2025-07-15T00:13:58.619Z"
+  },
+  "createdAt": {
+    "$date": "2025-07-15T00:13:58.620Z"
+  },
+  "updatedAt": {
+    "$date": "2025-07-15T00:13:58.620Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6875f8be5b8988aa9bc9de29"
+  },
+  "serviceType": "Basic Wash",
+  "servicePrice": 18,
+  "paymentMethod": "Mobile Payment",
+  "vehicleDetails": "Red Toyota Yaris Hybrid",
+  "customerName": "Addé Defreitas",
+  "notes": "Simple wash.",
+  "customer": {
+    "$oid": "6875f8be5b8988aa9bc9de27"
+  },
+  "createdBy": {
+    "$oid": "686caf9220e5a4bb1d2feabf"
+  },
+  "serviceDate": {
+    "$date": "2025-07-15T06:44:14.623Z"
+  },
+  "createdAt": {
+    "$date": "2025-07-15T06:44:14.624Z"
+  },
+  "updatedAt": {
+    "$date": "2025-07-15T06:44:14.624Z"
+  },
+  "__v": 0
+}]

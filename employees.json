@@ -1,0 +1,44 @@
+[{
+  "_id": {
+    "$oid": "68706d344b91904f0110380b"
+  },
+  "name": "Javier Wiggins",
+  "email": "jwiggins@jwautoclinic.com",
+  "phone": "12465642054",
+  "role": "admin",
+  "hourlyRate": 20,
+  "clockedIn": false,
+  "password": "$2b$10$X0aQcDH.cKXceZIn8.Xh1OAJqel7nHAlMENeN247HJzZcRuCRimAC",
+  "createdBy": {
+    "$oid": "686caf9220e5a4bb1d2feabf"
+  },
+  "createdAt": {
+    "$date": "2025-07-11T01:47:32.521Z"
+  },
+  "updatedAt": {
+    "$date": "2025-07-14T23:33:58.780Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6870884f89605661e9656983"
+  },
+  "name": "Addé Defreitas",
+  "email": "adefreitas",
+  "phone": "12468432881",
+  "role": "staff",
+  "hourlyRate": 0,
+  "clockedIn": false,
+  "password": "$2b$10$KUPZXn8gi/bnLbVW9hahZehb2mlcwj2yPVloIZg4vB3yXSQrvynKu",
+  "createdBy": {
+    "$oid": "686caf9220e5a4bb1d2feabf"
+  },
+  "createdAt": {
+    "$date": "2025-07-11T03:43:11.965Z"
+  },
+  "updatedAt": {
+    "$date": "2025-07-15T00:14:46.449Z"
+  },
+  "__v": 0
+}]

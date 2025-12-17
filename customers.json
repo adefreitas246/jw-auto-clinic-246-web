@@ -1,0 +1,126 @@
+[{
+  "_id": {
+    "$oid": "686e958ee9b7ea3b1d264f45"
+  },
+  "name": "Jane Smith",
+  "vehicleDetails": "White Mazda 3 Alexa",
+  "createdAt": {
+    "$date": "2025-07-09T16:15:10.536Z"
+  },
+  "updatedAt": {
+    "$date": "2025-07-09T16:15:10.536Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "686e9e16946b5cfaaa947786"
+  },
+  "name": "Jane Smith",
+  "vehicleDetails": "Grey Tesla X",
+  "createdAt": {
+    "$date": "2025-07-09T16:51:34.989Z"
+  },
+  "updatedAt": {
+    "$date": "2025-07-09T16:51:34.989Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "686f1a0e946b5cfaaa9477cc"
+  },
+  "name": "Chris Scott",
+  "vehicleDetails": "Blue Yaris Hybrid",
+  "createdAt": {
+    "$date": "2025-07-10T01:40:30.376Z"
+  },
+  "updatedAt": {
+    "$date": "2025-07-10T01:40:30.376Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "686f22c1946b5cfaaa94784d"
+  },
+  "name": "Lyn-Marie Defreitas",
+  "vehicleDetails": "Yaris 2021 white",
+  "createdAt": {
+    "$date": "2025-07-10T02:17:37.610Z"
+  },
+  "updatedAt": {
+    "$date": "2025-07-10T02:17:37.610Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6870563feb3556db613e1a3a"
+  },
+  "name": "Joshua Burns",
+  "vehicleDetails": "Blue Tesla S",
+  "createdAt": {
+    "$date": "2025-07-11T00:09:35.091Z"
+  },
+  "updatedAt": {
+    "$date": "2025-07-11T00:09:35.091Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "687058a1eb3556db613e1a7f"
+  },
+  "name": "Mclita King",
+  "vehicleDetails": "Red Suzuki Swift",
+  "createdAt": {
+    "$date": "2025-07-11T00:19:45.218Z"
+  },
+  "updatedAt": {
+    "$date": "2025-07-11T00:19:45.218Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "687469fa856a5bacae9d04e7"
+  },
+  "name": "Addé Defreitas",
+  "vehicleDetails": "Black Honda Sport",
+  "createdAt": {
+    "$date": "2025-07-14T02:22:50.685Z"
+  },
+  "updatedAt": {
+    "$date": "2025-07-14T02:22:50.685Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "68759d46b9972315f1b1a4dd"
+  },
+  "name": "Adde Defreitas",
+  "vehicleDetails": "Red Tesla S Model",
+  "createdAt": {
+    "$date": "2025-07-15T00:13:58.516Z"
+  },
+  "updatedAt": {
+    "$date": "2025-07-15T00:13:58.516Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6875f8be5b8988aa9bc9de27"
+  },
+  "name": "Addé Defreitas",
+  "vehicleDetails": "Red Toyota Yaris Hybrid",
+  "createdAt": {
+    "$date": "2025-07-15T06:44:14.509Z"
+  },
+  "updatedAt": {
+    "$date": "2025-07-15T06:44:14.509Z"
+  },
+  "__v": 0
+}]

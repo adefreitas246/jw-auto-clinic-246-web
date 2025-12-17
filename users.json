@@ -1,0 +1,38 @@
+[{
+  "_id": {
+    "$oid": "686caf9220e5a4bb1d2feabf"
+  },
+  "name": "Admin",
+  "email": "admin@jw.com",
+  "password": "$2b$10$BSI53eyEohb7AUmOopmZj.3j2zXIJ9U3NJxCU4qYqpnEs4LXTzzpO",
+  "role": "admin",
+  "createdAt": {
+    "$date": "2025-07-08T05:41:38.379Z"
+  },
+  "updatedAt": {
+    "$date": "2025-07-12T15:46:08.301Z"
+  },
+  "__v": 0,
+  "avatar": null,
+  "phone": "+12468432881",
+  "notificationsEnabled": true
+},
+{
+  "_id": {
+    "$oid": "686caf9220e5a4bb1d2feac1"
+  },
+  "name": "Staff",
+  "email": "staff@jw.com",
+  "password": "$2b$10$TzYsEZofFLP9PMy6WHwaKOSxgYKHNiwnB5JJd2kPF9ty2w1E9THb6",
+  "role": "staff",
+  "createdAt": {
+    "$date": "2025-07-08T05:41:38.521Z"
+  },
+  "updatedAt": {
+    "$date": "2025-07-12T15:36:07.026Z"
+  },
+  "__v": 0,
+  "avatar": null,
+  "phone": "12468432881",
+  "notificationsEnabled": true
+}]
