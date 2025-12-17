@@ -34,27 +34,74 @@ type Slide = {
 
 const SLIDES: Slide[] = [
   {
-    key: "welcome",
-    title: "Welcome to JW Auto Clinic",
-    subtitle:
-      "Book services, track spend, and manage staff — all in one place.",
-    image: require("@/assets/images/forgot-illustration.png"),
+    key: "home-transactions",
+    title: "Live Dashboard",
+    subtitle: "At-a-glance totals and charts for your day.",
+    image: require("@/assets/images/onboarding/HomeDashboardTransactions.jpeg"),
     gradient: ["#6a0dad", "#b07cf2"],
   },
   {
-    key: "track",
-    title: "Track & Report",
-    subtitle:
-      "Real‑time revenue, shifts, and transactions synced to the cloud.",
-    image: require("@/assets/images/reset-password-illustration.png"),
+    key: "home-employees",
+    title: "Manage Staff",
+    subtitle: "Filter by role, edit details, export lists.",
+    image: require("@/assets/images/onboarding/HomeDashboardEmployees.jpeg"),
     gradient: ["#6a0dad", "#22d3ee"],
   },
   {
-    key: "notify",
-    title: "Stay in the Loop",
-    subtitle: "Get updates, reminders, and promos — right when you need them.",
-    image: require("@/assets/images/success.png"),
+    key: "home-shifts",
+    title: "Shifts & Status",
+    subtitle: "Track active/completed shifts and export.",
+    image: require("@/assets/images/onboarding/HomeDashboardShifts.jpeg"),
     gradient: ["#6a0dad", "#84cc16"],
+  },
+  {
+    key: "home-reports",
+    title: "Reports",
+    subtitle: "Revenue, services, and expenses by period.",
+    image: require("@/assets/images/onboarding/HomeDashboardReports.jpeg"),
+    gradient: ["#6a0dad", "#b07cf2"],
+  },
+  {
+    key: "add-transactions",
+    title: "Add Transaction",
+    subtitle: "Pick services/specials and calculate instantly.",
+    image: require("@/assets/images/onboarding/AddTransactions.jpeg"),
+    gradient: ["#6a0dad", "#22d3ee"],
+  },
+  {
+    key: "cart-1",
+    title: "Cart & Discounts",
+    subtitle: "Edit items, apply discounts, and charge.",
+    image: require("@/assets/images/onboarding/AddTransactionsCart2.jpeg"),
+    gradient: ["#6a0dad", "#84cc16"],
+  },
+  {
+    key: "cart-2",
+    title: "Share or Clear",
+    subtitle: "Quick actions before checkout.",
+    image: require("@/assets/images/onboarding/AddTransactionsCart3.jpeg"),
+    gradient: ["#6a0dad", "#b07cf2"],
+  },
+  {
+    key: "employees-mgmt-1",
+    title: "Quick Actions",
+    subtitle: "Clock-in, lunch, and history from each card.",
+    image: require("@/assets/images/onboarding/EmployeesManagement.jpeg"),
+    gradient: ["#6a0dad", "#22d3ee"],
+  },
+  {
+    key: "employees-mgmt-2",
+    title: "Add Employees",
+    subtitle: "Role-based setup with auto-formatted phone.",
+    image: require("@/assets/images/onboarding/EmployeesManagement2.jpeg"),
+    gradient: ["#6a0dad", "#84cc16"],
+  },
+  {
+    key: "settings",
+    title: "Settings",
+    subtitle: "Profile, update checks, what’s new, and logout.",
+    image: require("@/assets/images/onboarding/Settings.jpeg"),
+    gradient: ["#6a0dad", "#b07cf2"],
   },
 ];
 
@@ -96,7 +143,7 @@ export default function OnboardingScreen() {
 
   const handleDone = useCallback(async () => {
     await AsyncStorage.setItem("hasOnboarded", "true");
-    router.replace("/auth/login"); // keep it simple
+    router.replace("/auth/login");
   }, [router]);
 
   const HeaderButtons = () => (
@@ -111,11 +158,7 @@ export default function OnboardingScreen() {
         zIndex: 10,
       }}
     >
-      <TouchableOpacity
-        disabled={index === 0}
-        onPress={goBack}
-        style={{ opacity: index === 0 ? 0 : 1 }}
-      >
+      <TouchableOpacity disabled={index === 0} onPress={goBack} style={{ opacity: index === 0 ? 0 : 1 }}>
         <Text style={{ color: "white", fontWeight: "600" }}>Back</Text>
       </TouchableOpacity>
       <TouchableOpacity onPress={handleDone}>
@@ -125,15 +168,7 @@ export default function OnboardingScreen() {
   );
 
   const Footer = () => (
-    <View
-      style={{
-        position: "absolute",
-        bottom: 40,
-        left: 20,
-        right: 20,
-        zIndex: 10,
-      }}
-    >
+    <View style={{ position: "absolute", bottom: 40, left: 20, right: 20, zIndex: 10 }}>
       <Dots x={x} slides={SLIDES} />
       <TouchableOpacity
         onPress={goNext}
@@ -164,9 +199,7 @@ export default function OnboardingScreen() {
         ref={flatRef}
         data={SLIDES}
         keyExtractor={(item) => item.key}
-        renderItem={({ item, index: i }) => (
-          <SlideItem item={item} index={i} x={x} />
-        )}
+        renderItem={({ item, index: i }) => <SlideItem item={item} index={i} x={x} />}
         horizontal
         pagingEnabled
         showsHorizontalScrollIndicator={false}
@@ -185,156 +218,128 @@ export default function OnboardingScreen() {
 }
 
 function SlideItem({
-  item,
-  index,
-  x,
-}: {
-  item: Slide;
-  index: number;
-  x: SharedValue<number>;
-}) {
-  // Parallax for title/subtitle/Image
-  const inputRange = [(index - 1) * width, index * width, (index + 1) * width];
-
-  const titleStyle = useAnimatedStyle(() => ({
-    transform: [
-      {
-        translateX: interpolate(
-          x.value,
-          inputRange,
-          [width * 0.3, 0, -width * 0.3],
-          Extrapolate.CLAMP
-        ),
-      },
-    ],
-    opacity: interpolate(x.value, inputRange, [0, 1, 0], Extrapolate.CLAMP),
-  }));
-
-  const subStyle = useAnimatedStyle(() => ({
-    transform: [
-      {
-        translateX: interpolate(
-          x.value,
-          inputRange,
-          [width * 0.5, 0, -width * 0.5],
-          Extrapolate.CLAMP
-        ),
-      },
-    ],
-    opacity: interpolate(x.value, inputRange, [0, 1, 0], Extrapolate.CLAMP),
-  }));
-
-  const imageStyle = useAnimatedStyle(() => ({
-    transform: [
-      {
-        translateY: interpolate(
-          x.value,
-          inputRange,
-          [40, 0, -40],
-          Extrapolate.CLAMP
-        ),
-      },
-      {
-        scale: interpolate(
-          x.value,
-          inputRange,
-          [0.8, 1, 0.8],
-          Extrapolate.CLAMP
-        ),
-      },
-    ],
-    opacity: interpolate(x.value, inputRange, [0.6, 1, 0.6], Extrapolate.CLAMP),
-  }));
-
-  return (
-    <View style={{ width, height }}>
-      <LinearGradient
-        colors={item.gradient}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={{ ...StyleSheet.absoluteFillObject } as any}
-      />
-      <View
-        style={{
-          flex: 1,
-          paddingTop: 120,
-          alignItems: "center",
-          paddingHorizontal: 24,
-        }}
-      >
-        <Animated.View
-          style={[
-            {
-              width: width * 0.75,
-              height: width * 0.75,
-              borderRadius: 12,
-              overflow: "hidden",
-            },
-            imageStyle,
-          ]}
+    item,
+    index,
+    x,
+  }: {
+    item: Slide;
+    index: number;
+    x: SharedValue<number>;
+  }) {
+    const inputRange = [(index - 1) * width, index * width, (index + 1) * width];
+  
+    const titleStyle = useAnimatedStyle(() => ({
+      transform: [{ translateX: interpolate(x.value, inputRange, [width * 0.3, 0, -width * 0.3], Extrapolate.CLAMP) }],
+      opacity: interpolate(x.value, inputRange, [0, 1, 0], Extrapolate.CLAMP),
+    }));
+  
+    const subStyle = useAnimatedStyle(() => ({
+      transform: [{ translateX: interpolate(x.value, inputRange, [width * 0.5, 0, -width * 0.5], Extrapolate.CLAMP) }],
+      opacity: interpolate(x.value, inputRange, [0, 1, 0], Extrapolate.CLAMP),
+    }));
+  
+    const imageStyle = useAnimatedStyle(() => ({
+      transform: [
+        { translateY: interpolate(x.value, inputRange, [40, 0, -40], Extrapolate.CLAMP) },
+        { scale: interpolate(x.value, inputRange, [0.95, 1, 0.95], Extrapolate.CLAMP) },
+      ],
+      opacity: interpolate(x.value, inputRange, [0.6, 1, 0.6], Extrapolate.CLAMP),
+    }));
+  
+    // --- NEW: calculate an image size that always leaves room for text + button
+    const PHONE_AR = 19.5 / 9; // (height / width) of a tall phone screenshot
+    const isSmallScreen = height < 750;
+    const maxImageHeight = height * (isSmallScreen ? 0.40 : 0.65); // cap relative to screen height
+  
+    // Start from a wide image, then clamp height if needed (preserving aspect ratio)
+    const baseWidth = width * 0.82;
+    let imgWidth = baseWidth;
+    let imgHeight = baseWidth * PHONE_AR;
+  
+    if (imgHeight > maxImageHeight) {
+      imgHeight = maxImageHeight;
+      imgWidth = imgHeight / PHONE_AR;
+    }
+    // --- END NEW
+  
+    return (
+      <View style={{ width, height }}>
+        <LinearGradient
+          colors={item.gradient}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={{ ...StyleSheet.absoluteFillObject } as any}
+        />
+        <View
+          style={{
+            flex: 1,
+            paddingTop: 64, // slightly tighter to gain space
+            alignItems: "center",
+            paddingHorizontal: 24,
+          }}
         >
-          <Image
-            source={item.image}
-            style={{ width: "100%", height: "100%", resizeMode: "contain" }}
-          />
-        </Animated.View>
-
-        <Animated.Text
-          style={[
-            {
-              marginTop: 16,
-              color: "white",
-              fontSize: 28,
-              fontWeight: "800",
-              textAlign: "center",
-            },
-            titleStyle,
-          ]}
-        >
-          {item.title}
-        </Animated.Text>
-
-        <Animated.Text
-          style={[
-            {
-              marginTop: 10,
-              color: "rgba(255,255,255,0.9)",
-              fontSize: 16,
-              lineHeight: 22,
-              textAlign: "center",
-            },
-            subStyle,
-          ]}
-        >
-          {item.subtitle}
-        </Animated.Text>
+          <Animated.View
+            style={[
+              {
+                width: imgWidth,
+                height: imgHeight,
+                borderRadius: 16,
+                overflow: "hidden",
+                backgroundColor: "rgba(255,255,255,0.1)",
+              },
+              imageStyle,
+            ]}
+          >
+            <Image
+              source={item.image}
+              style={{ width: "100%", height: "100%", resizeMode: "contain" }}
+            />
+          </Animated.View>
+  
+          <Animated.Text
+            style={[
+              {
+                marginTop: 14,
+                color: "white",
+                fontSize: 28,
+                fontWeight: "800",
+                textAlign: "center",
+              },
+              titleStyle,
+            ]}
+          >
+            {item.title}
+          </Animated.Text>
+  
+          <Animated.Text
+            style={[
+              {
+                marginTop: 10,
+                color: "rgba(255,255,255,0.92)",
+                fontSize: 16,
+                lineHeight: 22,
+                textAlign: "center",
+                paddingHorizontal: 6,
+              },
+              subStyle,
+            ]}
+          >
+            {item.subtitle}
+          </Animated.Text>
+        </View>
       </View>
-    </View>
-  );
-}
+    );
+  }
+  
 
 function Dot({ x, index }: { x: SharedValue<number>; index: number }) {
   const inputRange = [(index - 1) * width, index * width, (index + 1) * width];
-
   const rStyle = useAnimatedStyle(() => {
     const w = interpolate(x.value, inputRange, [8, 24, 8], Extrapolate.CLAMP);
-    const o = interpolate(
-      x.value,
-      inputRange,
-      [0.5, 1, 0.5],
-      Extrapolate.CLAMP
-    );
+    const o = interpolate(x.value, inputRange, [0.5, 1, 0.5], Extrapolate.CLAMP);
     return { width: w, opacity: o };
   });
-
-  return (
-    <Animated.View
-      style={[
-        { height: 8, borderRadius: 999, backgroundColor: "white" },
-        rStyle,
-      ]}
-    />
-  );
+  return <Animated.View style={[{ height: 8, borderRadius: 999, backgroundColor: "white" }, rStyle]} />;
 }
 
 function Dots({ x, slides }: { x: SharedValue<number>; slides: Slide[] }) {

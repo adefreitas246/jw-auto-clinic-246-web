@@ -12,6 +12,7 @@ import { Slot, usePathname, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
 const ONBOARDING_ROUTE = "/onboarding-screen";
 
@@ -140,11 +141,13 @@ export default function RootLayout() {
   if (!loaded) return null;
 
   return (
-    <AuthProvider>
-      <ThemeProvider value={colorScheme === "light" ? DefaultTheme : DarkTheme}>
-        <AuthGate />
-        <StatusBar style="auto" />
-      </ThemeProvider>
-    </AuthProvider>
+    <SafeAreaProvider>
+      <AuthProvider>
+        <ThemeProvider value={colorScheme === "light" ? DefaultTheme : DarkTheme}>
+          <AuthGate />
+          <StatusBar style="auto" />
+        </ThemeProvider>
+      </AuthProvider>
+    </SafeAreaProvider>
   );
 }

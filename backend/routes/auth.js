@@ -109,19 +109,47 @@ router.post('/forgot-password', async (req, res) => {
       expiresAt,
     });
 
-    // Build app deep link (configure APP_RESET_LINK_BASE in your env)
-    const base = process.env.APP_RESET_LINK_BASE || 'jwautoclinic246://auth/reset-password';
-    const resetUrl = `${base}?token=${encodeURIComponent(rawToken)}`;
+    // === LINKS ===
+
+    // Deep-link base (for the HTML page to use)
+    const scheme = process.env.CLIENT_SCHEME || 'jwautoclinic246';
+    const appBase = process.env.APP_RESET_LINK_BASE || `${scheme}://auth/reset-password`;
+    const appLink = `${appBase}?token=${encodeURIComponent(rawToken)}`;
+
+    // Web reset link (HTTPS, always clickable in email)
+    const appBaseUrl = (process.env.APP_BASE_URL || 'https://jw-auto-clinic-246.onrender.com').replace(/\/$/, '');
+    const webLink = `${appBaseUrl}/auth/reset-password?token=${encodeURIComponent(rawToken)}`;
 
     await sendEmail({
       to: email,
       subject: 'Password Reset',
       html: `
         <p>Hello,</p>
-        <p>You requested a password reset. Click the link below to set a new password:</p>
-        <p><a href="${resetUrl}">${resetUrl}</a></p>
+        <p>You requested a password reset. Click the button below to set a new password:</p>
+
+        <p>
+          <a href="${webLink}"
+            style="display:inline-block;padding:10px 18px;background:#6a0dad;color:#ffffff;
+                    text-decoration:none;border-radius:6px;font-weight:bold;">
+            Reset Password
+          </a>
+        </p>
+
+        <p>If the button does not work, copy and paste this link into your browser:</p>
+        <p><a href="${webLink}">${webLink}</a></p>
+
         <p>This link will expire in 30 minutes and can only be used once.</p>
       `,
+      text: `
+    Hello,
+
+    You requested a password reset.
+
+    Open this link in your browser:
+    ${webLink}
+
+    This link will expire in 30 minutes and can only be used once.
+      `.trim(),
     });
 
     return res.json({ message: 'If this email exists, a reset link has been sent.' });

@@ -7,40 +7,20 @@
       "android",
       "web"
     ],
-    "version": "1.2.0",
-    "date": "2025-08-12",
-    "changes": [
-      {
-        "type": "New",
-        "text": "Support form on Settings."
-      },
-      {
-        "type": "Improved",
-        "text": "Faster employee list loading."
-      }
-    ],
+    "version": "1.4.0",
     "orientation": "default",
     "icon": "./assets/images/splash-icon-light.png",
     "scheme": "jwautoclinic246",
-    "deeplinks": [
-      "jwautoclinic246://"
-    ],
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
-    "runtimeVersion": "1.2.0",
+    "runtimeVersion": "1.4.0",
     "updates": {
       "enabled": true,
-      "url": "https://u.expo.dev/565ab218-7160-484c-b79b-78b85ae9409b",
-      "checkOnLaunch": "ALWAYS",
-      "channel": "production"
+      "url": "https://u.expo.dev/565ab218-7160-484c-b79b-78b85ae9409b"
     },
     "ios": {
       "supportsTablet": true,
-      "icon": {
-        "dark": "./assets/icons/ios-dark.png",
-        "light": "./assets/icons/ios-light.png",
-        "tinted": "./assets/icons/ios-tinted.png"
-      },
+      "icon": "./assets/icons/ios-light.png",
       "bundleIdentifier": "com.adefreitas.jwautoclinic",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
@@ -49,26 +29,25 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/icons/adaptive-icon.png",
-        "monochromeImage": "./assets/icons/adaptive-icon.png",
-        "backgroundImage": "./assets/icons/adaptive-icon.png",
-        "backgroundColor": "#ffffff",
-        "intentFilters": [
-          {
-            "action": "VIEW",
-            "data": [
-              {
-                "scheme": "jwautoclinic"
-              }
-            ],
-            "category": [
-              "BROWSABLE",
-              "DEFAULT"
-            ]
-          }
-        ]
+        "backgroundColor": "#ffffff"
       },
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ],
+          "data": [
+            {
+              "scheme": "jwautoclinic246"
+            }
+          ]
+        }
+      ],
       "edgeToEdgeEnabled": true,
-      "versionCode": 3
+      "versionCode": 12,
+      "package": "com.adefreitas.jwautoclinic"
     },
     "web": {
       "bundler": "metro",
@@ -87,7 +66,11 @@
       ],
       "expo-mail-composer",
       "expo-router",
-      "expo-updates"
+      "expo-updates",
+      "expo-font",
+      "expo-web-browser",
+      "react-native-bottom-tabs",
+      "expo-local-authentication"
     ],
     "experiments": {
       "typedRoutes": true
@@ -96,7 +79,87 @@
       "router": {},
       "eas": {
         "projectId": "565ab218-7160-484c-b79b-78b85ae9409b"
-      }
+      },
+      "changelog": {
+        "date": "2025-12-14",
+        "changes": [
+          {
+            "type": "New",
+            "text": "Biometric login added. A Face ID / Fingerprint option now appears on the login screen once enabled in Settings."
+          },
+          {
+            "type": "New",
+            "text": "New bottom sheet system introduced for smoother UI interactions across screens such as Services & Specials and Settings."
+          },
+          {
+            "type": "New",
+            "text": "Enhanced payment-method and earnings charts with tap-to-filter support and dynamic active-point display."
+          },
+          {
+            "type": "New",
+            "text": "Segment control upgraded so detail values reset and hide until a chart point is tapped."
+          },
+          {
+            "type": "Improved",
+            "text": "Tablet layout improvements across Employees, Transactions, and Settings for better portrait and landscape responsiveness."
+          },
+          {
+            "type": "Improved",
+            "text": "Sticky headers updated with better spacing, elevation, and full-width alignment."
+          },
+          {
+            "type": "Improved",
+            "text": "FAB buttons now appear correctly on Android in landscape mode and on tablets."
+          },
+          {
+            "type": "Improved",
+            "text": "Bottom sheets and modals now reposition properly with the keyboard and avoid hidden content."
+          },
+          {
+            "type": "Improved",
+            "text": "Login screen animations and layout polished; biometric button now appears contextually."
+          },
+          {
+            "type": "Improved",
+            "text": "Android app icon updated to use correct light-color version."
+          },
+          {
+            "type": "Improved",
+            "text": "Stronger password validation added to browser reset flow to match in-app complexity rules."
+          },
+          {
+            "type": "Improved",
+            "text": "Transaction detail fallback logic added so a missing API record loads gracefully from the cached list."
+          },
+          {
+            "type": "Improved",
+            "text": "Improved OSRM distance and matching logic on server with consistent fallback routing."
+          },
+          {
+            "type": "Fixed",
+            "text": "Fixed bottom sheet blank-space bug caused by keyboard closing."
+          },
+          {
+            "type": "Fixed",
+            "text": "Fixed landscape layout issues where some screens displayed misaligned or cut-off content."
+          },
+          {
+            "type": "Fixed",
+            "text": "Fixed issue where chart active-point values remained visible when switching segments."
+          },
+          {
+            "type": "Fixed",
+            "text": "Resolved custom tab bar hook error ('Rendered fewer hooks than expected')."
+          },
+          {
+            "type": "Fixed",
+            "text": "Fixed text overflow issues in service lists and transaction cards."
+          }
+        ]
+      },
+      "deeplinks": [
+        "jwautoclinic246://"
+      ]
     },
     "owner": "adefreitas"
   }

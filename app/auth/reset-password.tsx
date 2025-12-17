@@ -8,7 +8,6 @@ import {
   Keyboard,
   KeyboardAvoidingView,
   Platform,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
@@ -18,6 +17,7 @@ import {
   View,
 } from "react-native";
 import * as Animatable from "react-native-animatable";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const API =
   process.env.EXPO_PUBLIC_API_URL || "https://jw-auto-clinic-246.onrender.com";
@@ -189,125 +189,127 @@ export default function ResetPasswordScreen() {
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
           >
-            {showSuccess ? (
-              <Animatable.View
-                animation="zoomIn"
-                duration={700}
-                style={styles.successBox}
-              >
-                <Image
-                  source={require("@/assets/images/success.png")}
-                  style={styles.illustration}
-                />
-                <Text style={styles.successText}>
-                  Password Reset Successfully
-                </Text>
-              </Animatable.View>
-            ) : (
-              <>
-                <Image
-                  source={require("@/assets/images/reset-password-illustration.png")}
-                  style={styles.illustration}
-                />
-
-                <Animatable.View ref={passwordRef}>
-                  <View style={styles.passwordRow}>
-                    <TextInput
-                      placeholder="New Password"
-                      placeholderTextColor="#777"
-                      secureTextEntry={!showPassword}
-                      style={[styles.input, passwordError && styles.errorInput]}
-                      value={password}
-                      onChangeText={setPassword}
-                    />
-                    <TouchableOpacity
-                      onPress={() => setShowPassword((p) => !p)}
-                      style={styles.eyeIcon}
-                      accessibilityLabel="Toggle password visibility"
-                    >
-                      <Ionicons
-                        name={showPassword ? "eye-outline" : "eye"}
-                        size={22}
-                        color="#555"
-                      />
-                    </TouchableOpacity>
-                  </View>
-                </Animatable.View>
-
-                <View style={styles.tooltip}>
-                  <Text style={styles.tooltipText}>
-                    Include at least 8 characters, 1 uppercase, 1 lowercase, 1
-                    number, and 1 special character
+            <Animatable.View style={styles.container}>
+              {showSuccess ? (
+                <Animatable.View
+                  animation="zoomIn"
+                  duration={700}
+                  style={styles.successBox}
+                >
+                  <Image
+                    source={require("@/assets/images/success.png")}
+                    style={styles.illustration}
+                  />
+                  <Text style={styles.successText}>
+                    Password Reset Successfully
                   </Text>
-                </View>
+                </Animatable.View>
+              ) : (
+                <>
+                  <Image
+                    source={require("@/assets/images/reset-password-illustration.png")}
+                    style={styles.illustration}
+                  />
 
-                {passwordStrength && (
-                  <View style={styles.meterContainer}>
-                    <View
-                      style={[
-                        styles.meterBar,
-                        { backgroundColor: strengthColor },
-                      ]}
-                    />
-                    <Text style={[styles.meterLabel, { color: strengthColor }]}>
-                      {passwordStrength} Password
+                  <Animatable.View ref={passwordRef}>
+                    <View style={styles.passwordRow}>
+                      <TextInput
+                        placeholder="New Password"
+                        placeholderTextColor="#777"
+                        secureTextEntry={!showPassword}
+                        style={[styles.input, passwordError && styles.errorInput]}
+                        value={password}
+                        onChangeText={setPassword}
+                      />
+                      <TouchableOpacity
+                        onPress={() => setShowPassword((p) => !p)}
+                        style={styles.eyeIcon}
+                        accessibilityLabel="Toggle password visibility"
+                      >
+                        <Ionicons
+                          name={showPassword ? "eye-outline" : "eye"}
+                          size={22}
+                          color="#555"
+                        />
+                      </TouchableOpacity>
+                    </View>
+                  </Animatable.View>
+
+                  <View style={styles.tooltip}>
+                    <Text style={styles.tooltipText}>
+                      Include at least 8 characters, 1 uppercase, 1 lowercase, 1
+                      number, and 1 special character
                     </Text>
                   </View>
-                )}
 
-                <Animatable.View ref={confirmRef}>
-                  <View style={styles.passwordRow}>
-                    <TextInput
-                      placeholder="Confirm New Password"
-                      placeholderTextColor="#777"
-                      secureTextEntry={!showConfirm}
-                      style={[
-                        styles.input,
-                        confirmError && styles.errorInput,
-                        confirmMatch === false && { borderColor: "red" },
-                        confirmMatch === true && { borderColor: "green" },
-                      ]}
-                      value={confirm}
-                      onChangeText={(text) => {
-                        setConfirm(text);
-                        if (text.length > 0) {
-                          setConfirmMatch(text === password);
-                        } else {
-                          setConfirmMatch(null);
-                        }
-                      }}
-                    />
-                    <TouchableOpacity
-                      onPress={() => setShowConfirm((p) => !p)}
-                      style={styles.eyeIcon}
-                      accessibilityLabel="Toggle confirm password visibility"
-                    >
-                      <Ionicons
-                        name={showConfirm ? "eye-outline" : "eye"}
-                        size={22}
-                        color="#555"
+                  {passwordStrength && (
+                    <View style={styles.meterContainer}>
+                      <View
+                        style={[
+                          styles.meterBar,
+                          { backgroundColor: strengthColor },
+                        ]}
                       />
-                    </TouchableOpacity>
-                  </View>
-                </Animatable.View>
+                      <Text style={[styles.meterLabel, { color: strengthColor }]}>
+                        {passwordStrength} Password
+                      </Text>
+                    </View>
+                  )}
 
-                {confirmMatch === false && (
-                  <Text style={styles.mismatchText}>
-                    Passwords do not match
-                  </Text>
-                )}
+                  <Animatable.View ref={confirmRef}>
+                    <View style={styles.passwordRow}>
+                      <TextInput
+                        placeholder="Confirm New Password"
+                        placeholderTextColor="#777"
+                        secureTextEntry={!showConfirm}
+                        style={[
+                          styles.input,
+                          confirmError && styles.errorInput,
+                          confirmMatch === false && { borderColor: "red" },
+                          confirmMatch === true && { borderColor: "green" },
+                        ]}
+                        value={confirm}
+                        onChangeText={(text) => {
+                          setConfirm(text);
+                          if (text.length > 0) {
+                            setConfirmMatch(text === password);
+                          } else {
+                            setConfirmMatch(null);
+                          }
+                        }}
+                      />
+                      <TouchableOpacity
+                        onPress={() => setShowConfirm((p) => !p)}
+                        style={styles.eyeIcon}
+                        accessibilityLabel="Toggle confirm password visibility"
+                      >
+                        <Ionicons
+                          name={showConfirm ? "eye-outline" : "eye"}
+                          size={22}
+                          color="#555"
+                        />
+                      </TouchableOpacity>
+                    </View>
+                  </Animatable.View>
 
-                <TouchableOpacity
-                  style={[styles.button, loading && { opacity: 0.7 }]}
-                  onPress={handleReset}
-                  disabled={loading}
-                >
-                  <Text style={styles.buttonText}>
-                    {loading ? "Resetting..." : "Reset Password"}
-                  </Text>
-                </TouchableOpacity>
-              </>
-            )}
+                  {confirmMatch === false && (
+                    <Text style={styles.mismatchText}>
+                      Passwords do not match
+                    </Text>
+                  )}
+
+                  <TouchableOpacity
+                    style={[styles.button, loading && { opacity: 0.7 }]}
+                    onPress={handleReset}
+                    disabled={loading}
+                  >
+                    <Text style={styles.buttonText}>
+                      {loading ? "Resetting..." : "Reset Password"}
+                    </Text>
+                  </TouchableOpacity>
+                </>
+              )}
+            </Animatable.View>
           </ScrollView>
         </TouchableWithoutFeedback>
       </KeyboardAvoidingView>
@@ -342,13 +344,16 @@ const styles = StyleSheet.create({
     backgroundColor: "#f3f3f3",
     padding: 14,
     borderRadius: 10,
+    marginBottom: 24,
     fontSize: 16,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: "#f3f3f3",
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 1,
   },
   errorInput: {
     borderColor: "red",
+    borderWidth: 1,
   },
   button: {
     backgroundColor: "#6a0dad",

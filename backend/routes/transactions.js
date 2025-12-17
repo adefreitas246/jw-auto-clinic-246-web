@@ -1,33 +1,56 @@
 // routes/transactions
+const mongoose = require('mongoose');
 const express = require('express');
 const router = express.Router();
+
 const Transaction = require('../models/Transaction');
 const Customer = require('../models/Customer');
 const authMiddleware = require('../middleware/authMiddleware');
-
 const sendEmail = require('../utils/sendEmail');
 
-
+// ---------------- Logo resolver ----------------
 const fs = require('fs');
 const path = require('path');
-const puppeteer = require('puppeteer'); // 👈 add
 
-// cache the base64 once
 let LOGO_BASE64 = null;
+
+function readAsBase64IfExists(p) {
+  try {
+    if (fs.existsSync(p)) return fs.readFileSync(p).toString('base64');
+  } catch (_) {}
+  return '';
+}
+
 function getLogoBase64() {
   if (LOGO_BASE64 !== null) return LOGO_BASE64;
-  try {
-    const filePath = path.join(__dirname, '..', 'assets', 'images', 'logo.png'); // adjust filename if needed
-    const buf = fs.readFileSync(filePath);
-    LOGO_BASE64 = buf.toString('base64');
-  } catch (e) {
-    console.warn('⚠️ Logo not found for email header:', e.message);
-    LOGO_BASE64 = '';
+
+  const BACKEND_DIR = path.resolve(__dirname, '..');
+  const REPO_ROOT = path.resolve(BACKEND_DIR, '..');
+  const ENV_PATH = process.env.LOGO_RELATIVE_PATH || 'assets/images/icon.png';
+
+  const candidates = [
+    path.join(REPO_ROOT, ENV_PATH),
+    path.join(REPO_ROOT, 'assets', 'images', 'icon.png'),
+    path.join(REPO_ROOT, 'assets', 'images', 'logo.png'),
+    path.join(process.cwd(), 'assets', 'images', 'icon.png'),
+    path.join(process.cwd(), 'assets', 'images', 'logo.png'),
+    path.join(BACKEND_DIR, 'assets', 'images', 'icon.png'),
+    path.join(BACKEND_DIR, 'assets', 'images', 'logo.png'),
+  ];
+
+  for (const p of candidates) {
+    const b64 = readAsBase64IfExists(p);
+    if (b64) {
+      LOGO_BASE64 = b64;
+      return LOGO_BASE64;
+    }
   }
+
+  console.warn('⚠️ Logo not found for email header. Checked:', candidates);
+  LOGO_BASE64 = '';
   return LOGO_BASE64;
 }
 
-// Safe logo <img> (fixes your current undefined b64/heightPx)
 function logoImgTag(heightPx = 40) {
   const b64 = getLogoBase64();
   return b64
@@ -35,36 +58,56 @@ function logoImgTag(heightPx = 40) {
     : `<span style="font-weight:700;font-size:18px">JW Auto Clinic 246</span>`;
 }
 
-// HTML → PDF Buffer
-async function htmlToPdfBuffer(html) {
-  const browser = await puppeteer.launch({
-    args: ['--no-sandbox', '--disable-setuid-sandbox'],
-    headless: 'new',
-  });
+// ---------------- Utils ----------------
+const isEmail = (s = '') => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(s).trim());
+function currency(n) { return Number(n || 0).toFixed(2); }
+
+function dataUrlToAttachment(dataUrl, filename = `Receipt-${new Date().toISOString().slice(0,10)}.pdf`) {
+  if (!dataUrl) return null;
+  // Accept either full data URL or raw base64
+  const base64 = dataUrl.includes('base64,') ? dataUrl.split('base64,')[1] : dataUrl;
   try {
-    const page = await browser.newPage();
-    // Ensure images (data URLs) and fonts render
-    await page.setContent(html, { waitUntil: ['load', 'domcontentloaded', 'networkidle0'] });
-    const pdf = await page.pdf({
-      format: 'A4',
-      printBackground: true,
-      margin: { top: '14mm', right: '12mm', bottom: '14mm', left: '12mm' },
-    });
-    return pdf;
-  } finally {
-    await browser.close();
+    const buf = Buffer.from(base64, 'base64');
+    if (!buf.length) return null;
+    return {
+      filename,
+      content: buf,
+      contentType: 'application/pdf',
+    };
+  } catch {
+    return null;
   }
 }
 
+/**
+ * Ensure a Customer exists; return the _id. Uses (name + vehicleDetails) uniqueness.
+ * If customer id already provided, it is returned as-is (after basic sanity check).
+ */
+async function ensureCustomerId({ customer, customerName, email, phone }) {
+  if (customer) return customer;
 
-/* ------------------------- helpers: email templates ------------------------ */
+  const name = String(customerName || '').trim();
+  const mail = String(email || '').trim().toLowerCase();
+  if (!name && !mail) throw new Error('Customer name or email is required.');
 
-const isEmail = (s = '') => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(s).trim());
+  if (mail && isEmail(mail)) {
+    const byEmail = await Customer.findOne({ email: mail }).lean();
+    if (byEmail?._id) return byEmail._id;
+  }
 
-function currency(n) {
-  const v = Number(n || 0);
-  return v.toFixed(2);
+  if (name) {
+    const byName = await Customer.findOne({ name }).lean();
+    if (byName?._id) return byName._id;
+  }
+
+  const created = await Customer.create({
+    name: name || 'Customer',
+    email: isEmail(mail) ? mail : undefined,
+    phone: (phone || '').trim() || undefined,
+  });
+  return created._id;
 }
+
 
 /** Prefer req.body.email, else fall back to the Customer.email */
 async function pickReceiptEmail({ email, customer }) {
@@ -81,34 +124,50 @@ async function pickReceiptEmail({ email, customer }) {
   return '';
 }
 
-/** Works with either sendEmail({ to, subject, html }) OR sendEmail(to, subject, html) */
-async function safeSendEmail(to, subject, html) {
+/** sendEmail wrapper (supports attachments via utils/sendEmail.js) */
+async function safeSendEmail(to, subject, html, { attachments } = {}) {
   if (!isEmail(to)) throw new Error('No recipient address provided (missing/invalid).');
-  try {
-    // Try object signature first
-    await sendEmail({ to, subject, html });
-  } catch (e1) {
-    // Fallback to (to, subject, html)
-    await sendEmail(to, subject, html);
-  }
+  return sendEmail({ to, subject, html, ...(attachments ? { attachments } : {}) });
 }
 
+// ---------------- Email HTML builders ----------------
 function buildBatchReceiptHTML({ customerName, vehicleDetails, paymentMethod, items }) {
-  const subtotal = items.reduce((s, i) => s + (Number(i.originalPrice) || 0), 0);
-  const totalDiscount = items.reduce((s, i) => s + (Number(i.discountAmount) || 0), 0);
-  const grandTotal = items.reduce((s, i) => s + (Number(i.finalPrice) || 0), 0);
+  const n = (v) => {
+    const x = Number(v);
+    return Number.isFinite(x) ? x : 0;
+  };
+  const money = (v) => Number(v || 0).toFixed(2);
 
-  const rows = items.map((i, idx) => `
-    <tr>
-      <td style="padding:8px 12px;border-bottom:1px solid #eee;">${idx + 1}</td>
-      <td style="padding:8px 12px;border-bottom:1px solid #eee;">
-        ${i.serviceName}${i.specialsName ? ` (${i.specialsName})` : ''}
-      </td>
-      <td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:right;">$${currency(i.originalPrice)}</td>
-      <td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:right;">${i.discountPercent || 0}%</td>
-      <td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:right;">$${currency(i.finalPrice)}</td>
-    </tr>
-  `).join('');
+  let subtotal = 0;
+  let totalDiscount = 0;
+  let grandTotal = 0;
+
+  const rows = (items || []).map((i, idx) => {
+    const op = n(i.originalPrice);
+    const dp = n(i.discountPercent);
+    const daRaw = n(i.discountAmount);
+    // Prefer explicit discountAmount; otherwise compute from percent
+    const dAmt = daRaw > 0 ? daRaw : (op * dp) / 100;
+
+    // Prefer provided finalPrice if it’s a sane number; else compute
+    const fp = Math.max(0, op - dAmt);
+
+    subtotal += op;
+    totalDiscount += (op - fp);
+    grandTotal += fp;
+
+    return `
+      <tr>
+        <td style="padding:8px 12px;border-bottom:1px solid #eee;">${idx + 1}</td>
+        <td style="padding:8px 12px;border-bottom:1px solid #eee;">
+          ${i.serviceName}${i.specialsName ? ` (${i.specialsName})` : ''}
+        </td>
+        <td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:right;">$${money(op)}</td>
+        <td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:right;">${dp}%</td>
+        <td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:right;">$${money(fp)}</td>
+      </tr>
+    `;
+  }).join('');
 
   return `
     <html>
@@ -140,9 +199,9 @@ function buildBatchReceiptHTML({ customerName, vehicleDetails, paymentMethod, it
         </table>
 
         <p style="margin:12px 0">
-          <strong>Subtotal:</strong> $${currency(subtotal)}<br/>
-          <strong>Discounts:</strong> −$${currency(totalDiscount)}<br/>
-          <strong>Total:</strong> $${currency(grandTotal)}
+          <strong>Subtotal:</strong> $${money(subtotal)}<br/>
+          <strong>Discounts:</strong> −$${money(totalDiscount)}<br/>
+          <strong>Total:</strong> $${money(grandTotal)}
         </p>
 
         <p style="margin:12px 0">Payment Method: ${paymentMethod || 'Cash'}</p>
@@ -152,11 +211,13 @@ function buildBatchReceiptHTML({ customerName, vehicleDetails, paymentMethod, it
   `;
 }
 
+
 function buildSingleReceiptHTML(t) {
   const op = Number(t.originalPrice) || 0;
   const dp = Number(t.discountPercent) || 0;
-  const dAmt = Number(t.discountAmount) || (op * dp) / 100;
-  const final = Number(t.finalPrice) || (op - dAmt);
+  const da = Number(t.discountAmount) || 0;
+  const dAmt = da > 0 ? da : (op * dp) / 100;
+  const final = Math.max(0, op - dAmt);
 
   return `
     <html>
@@ -203,58 +264,100 @@ function buildSingleReceiptHTML(t) {
   `;
 }
 
+// ---------------- Routes ----------------
 
-/* ------------------------------- GET all ------------------------------- */
+// GET /api/transactions?customer=<id>&limit=25&cursor=<lastId>&from=2025-01-01&to=2025-12-31
 router.get('/', async (req, res) => {
   try {
-    const transactions = await Transaction.find()
-      .populate('createdBy', 'name email')
-      .populate('customer') // if you normalised customers
-      .sort({ serviceDate: -1, createdAt: -1 });
+    const { customer, limit = '25', cursor, from, to } = req.query;
 
-    res.json(transactions);
+    const q = {};
+    if (customer && mongoose.isValidObjectId(customer)) q.customer = new mongoose.Types.ObjectId(customer);
+
+    if (from || to) {
+      q.serviceDate = {};
+      if (from) q.serviceDate.$gte = new Date(from);
+      if (to)   q.serviceDate.$lte = new Date(to);
+    }
+
+    const pageSize = Math.min(100, Math.max(1, Number(limit) || 25));
+
+    // Cursor on _id (newer first). If cursor is present, fetch items with _id < cursor.
+    if (cursor && mongoose.isValidObjectId(cursor)) q._id = { $lt: new mongoose.Types.ObjectId(cursor) };
+
+    const docs = await Transaction.find(q)
+      .sort({ _id: -1 })         // newest first
+      .limit(pageSize + 1)       // fetch one extra to know if there's a next page
+      .populate('createdBy', 'name email')
+      .populate('customer');
+
+    const hasMore = docs.length > pageSize;
+    const items   = hasMore ? docs.slice(0, pageSize) : docs;
+    const nextCursor = hasMore ? String(items[items.length - 1]._id) : null;
+
+    res.json({ items, nextCursor });
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch transactions' });
   }
 });
 
-/* ------------------------------ POST single ----------------------------- */
+
+// GET /api/transactions/vehicles?customer=<id>&limit=50
+router.get('/vehicles', authMiddleware, async (req, res) => {
+  try {
+    const { customer, limit = '50' } = req.query;
+    if (!customer || !mongoose.isValidObjectId(customer)) {
+      return res.status(400).json({ error: 'customer is required' });
+    }
+
+    const rows = await Transaction.aggregate([
+      { $match: {
+          customer: new mongoose.Types.ObjectId(customer),
+          vehicleDetails: { $type: 'string', $ne: '' }
+        }},
+      { $group: { _id: '$vehicleDetails', last: { $max: '$serviceDate' } } },
+      { $sort: { last: -1 } },
+      { $limit: Math.min(200, Number(limit) || 50) },
+    ]);
+
+    res.json(rows.map(r => r._id)); // strict string[]
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch vehicles' });
+  }
+});
+
+
+
+// POST single (ensures customer, attaches client PDF if provided)
 router.post('/', authMiddleware, async (req, res) => {
   try {
-    const { finalPrice, ...rest } = req.body;
+    const { finalPrice, receiptPdfBase64, receiptFileName, ...rest } = req.body;
 
-    if (!rest.customer) {
-      return res.status(400).json({ error: 'Customer is required' });
-    }
+    // Ensure customer
+    const customerId = await ensureCustomerId({
+      customer: rest.customer,
+      customerName: rest.customerName,
+      vehicleDetails: rest.vehicleDetails,
+      email: rest.email,
+      phone: rest.phone,
+    });
+
     if (!rest.paymentMethod) {
       return res.status(400).json({ error: 'Payment method is required' });
     }
 
-    const transactionData = { ...rest, createdBy: req.user.id };
-    const newTransaction = new Transaction(transactionData);
-    await newTransaction.save();
+    const transactionData = { ...rest, customer: customerId, createdBy: req.user.id };
+    const newTransaction = await Transaction.create(transactionData);
 
+    // Email (HTML + optional attached PDF from client)
     let emailSent = false;
     try {
-      const to = await pickReceiptEmail({
-        email: newTransaction.email,
-        customer: newTransaction.customer,
-      });
-
+      const to = await pickReceiptEmail({ email: newTransaction.email, customer: newTransaction.customer });
       if (to) {
         const html = buildSingleReceiptHTML(newTransaction);
-        let attachments;
-        try {
-          const pdfBuffer = await htmlToPdfBuffer(html);
-          attachments = [{ filename: `Receipt-${new Date().toISOString().slice(0,10)}.pdf`, content: pdfBuffer }];
-        } catch (pdfErr) {
-          console.warn('PDF generation failed, sending email without attachment:', pdfErr?.message || pdfErr);
-        }
-
-        await safeSendEmail(to, 'Your JW Auto Clinic Receipt', html, { attachments });
+        const att = dataUrlToAttachment(receiptPdfBase64, receiptFileName);
+        await safeSendEmail(to, 'Your JW Auto Clinic Receipt', html, { attachments: att ? [att] : undefined });
         emailSent = true;
-      } else {
-        console.warn('Receipt email skipped: no valid email for customer/transaction.');
       }
     } catch (mailErr) {
       console.error('Email failed:', mailErr?.message || mailErr);
@@ -262,103 +365,136 @@ router.post('/', authMiddleware, async (req, res) => {
 
     res.status(201).json({ ...newTransaction.toObject(), emailSent });
   } catch (err) {
-    res.status(400).json({ error: err.message });
+    res.status(400).json({ error: err?.message || 'Failed to save transaction' });
   }
 });
 
-
-/* ------------------------------ GET by id ------------------------------- */
-router.get('/:id', async (req, res) => {
-  try {
-    const transaction = await Transaction.findById(req.params.id)
-      .populate('createdBy', 'name email')
-      .populate('customer');
-    if (!transaction) return res.status(404).json({ error: 'Transaction not found' });
-
-    res.json(transaction);
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
-});
-
-/* ------------------------------ DELETE one ------------------------------ */
+// DELETE one
 router.delete('/:id', authMiddleware, async (req, res) => {
   try {
     const result = await Transaction.findByIdAndDelete(req.params.id);
     if (!result) return res.status(404).json({ error: 'Transaction not found' });
-
     res.json({ message: 'Transaction deleted' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: err?.message || 'Failed to delete' });
   }
 });
 
-/* --------------------------- POST batch (new) --------------------------- */
-/**
- * Body:
- * {
- *   customerName, email, vehicleDetails, paymentMethod, customer,
- *   items: [{
- *     serviceTypeId, serviceName, specialsId, specialsName,
- *     originalPrice, discountPercent, discountAmount, notes, paymentMethod
- *   }, ...]
- * }
- */
+
+// --- add near top (helpers) ---
+const VALID_PAYMENT_METHODS = ['Cash', 'Mobile Payment'];
+
+const toNumber = (v, d = 0) => {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : d;
+};
+
+const parseServiceDate = (v) => {
+  if (!v) return undefined;
+  const d = new Date(v);
+  return Number.isNaN(d.getTime()) ? undefined : d; // undefined lets schema default
+};
+
+
+// POST batch (ensures customer, attaches client PDF if provided)
 router.post('/batch', authMiddleware, async (req, res) => {
-  const { customerName, email, vehicleDetails, paymentMethod, customer, items } = req.body;
+  const {
+    customerName,
+    email,
+    vehicleDetails,
+    paymentMethod,    // header-level fallback
+    customer,
+    items,
+    receiptPdfBase64,
+    receiptFileName,
+  } = req.body;
 
   if (!Array.isArray(items) || items.length === 0) {
     return res.status(400).json({ error: 'No items to save.' });
   }
 
-  let docsToInsert;
   try {
-    docsToInsert = items.map((i) => {
-      const pm = i.paymentMethod || paymentMethod; // must be 'Cash' or 'Mobile Payment'
-      if (!pm) throw new Error('Payment method is required for all items');
+    // Ensure (or create) a customer id
+    const customerId = await ensureCustomerId({
+      customer,
+      customerName,
+      vehicleDetails,
+      email,
+      phone: req.body.phone,
+    });
+
+    // Build docs with valid per-item payment method + optional per-item serviceDate
+    const docsToInsert = items.map((i, idx) => {
+      const pmRaw = i.paymentMethod || paymentMethod || 'Cash';
+      const pm = VALID_PAYMENT_METHODS.includes(pmRaw) ? pmRaw : 'Cash';
+      if (pm !== pmRaw) {
+        console.warn(`Invalid payment method on item ${idx}; defaulting to Cash:`, pmRaw);
+      }
+
+      // Optional service date per item (falls back to schema default if invalid/absent)
+      const sd = parseServiceDate(i.serviceDate);
+
+      // If no notes provided, auto-fill with a concise item detail line
+      const userNotes = (i.notes ?? '').toString().trim();
+      const autoNotes =
+        `Item #${idx + 1}: ${i.serviceName}` +
+        (i.specialsName ? ` (${i.specialsName})` : '') +
+        ` • $${toNumber(i.originalPrice).toFixed(2)} • Disc ${toNumber(i.discountPercent)}%` +
+        (toNumber(i.discountAmount) ? ` + $${toNumber(i.discountAmount).toFixed(2)}` : '');
+
       return {
         customerName,
-        email, // store what client sent (may be empty); receipt email is derived later
+        email,
         vehicleDetails,
         serviceType: i.serviceName,
         specials: i.specialsName || null,
         paymentMethod: pm,
-        originalPrice: i.originalPrice,
-        discountPercent: i.discountPercent,
-        discountAmount: i.discountAmount,
-        notes: i.notes,
-        customer: i.customer || customer,
+        originalPrice: toNumber(i.originalPrice),
+        discountPercent: toNumber(i.discountPercent),
+        discountAmount: toNumber(i.discountAmount),
+        notes: userNotes || autoNotes,         // ← ensures notes carry item details
+        ...(sd ? { serviceDate: sd } : {}),    // ← include only if valid
+        customer: customerId,
         createdBy: req.user?.id,
       };
     });
-  } catch (mkErr) {
-    return res.status(400).json({ error: mkErr.message || 'Invalid item(s).' });
-  }
 
-  try {
-    const docs = await Transaction.insertMany(docsToInsert, {
+    // Filter out any obviously invalid rows (missing required strings/numbers)
+    const filtered = docsToInsert.filter(d =>
+      d.customerName && d.vehicleDetails && d.serviceType && d.paymentMethod &&
+      typeof d.originalPrice !== 'undefined'
+    );
+
+    if (filtered.length === 0) {
+      return res.status(400).json({ error: 'No valid items to save (missing required fields).' });
+    }
+
+    const docs = await Transaction.insertMany(filtered, {
       ordered: false,
       runValidators: true,
     });
 
-    // Decide label for email (never store 'Mixed' in DB)
-    const uniqueMethods = Array.from(new Set(docs.map((d) => d.paymentMethod).filter(Boolean)));
-    const summaryPaymentMethod = uniqueMethods.length > 1 ? 'Mixed' : (uniqueMethods[0] || 'Cash');
+    const savedCount = docs.length;
 
-    // Build items for email (from saved docs so finalPrice is computed server-side)
-    const emailItems = docs.map((d) => ({
-      serviceName: d.serviceType,
-      specialsName: d.specials,
-      originalPrice: d.originalPrice,
-      discountPercent: d.discountPercent,
-      discountAmount: d.discountAmount,
-      finalPrice: d.finalPrice,
-    }));
-
+    // Email
     let emailSent = false;
     try {
-      const to = await pickReceiptEmail({ email, customer });
+      const to = await pickReceiptEmail({ email, customer: customerId });
       if (to) {
+        // Build email summary from what was saved (accurate finals computed by schema)
+        const emailItems = docs.map((d) => ({
+          serviceName: d.serviceType,
+          specialsName: d.specials,
+          originalPrice: d.originalPrice,
+          discountPercent: d.discountPercent,
+          discountAmount: d.discountAmount,
+          finalPrice: d.finalPrice,
+        }));
+
+        // Decide label for email (never save 'Mixed' in DB)
+        const uniqueMethods = Array.from(new Set(docs.map((d) => d.paymentMethod).filter(Boolean)));
+        const summaryPaymentMethod = uniqueMethods.length > 1 ? 'Mixed' : (uniqueMethods[0] || 'Cash');
+
         const html = buildBatchReceiptHTML({
           customerName,
           vehicleDetails,
@@ -366,29 +502,25 @@ router.post('/batch', authMiddleware, async (req, res) => {
           items: emailItems,
         });
 
-        let attachments;
-        try {
-          const pdfBuffer = await htmlToPdfBuffer(html);
-          attachments = [{ filename: `Receipt-${new Date().toISOString().slice(0,10)}.pdf`, content: pdfBuffer }];
-        } catch (pdfErr) {
-          console.warn('PDF generation failed, sending email without attachment:', pdfErr?.message || pdfErr);
-        }
-
-        await safeSendEmail(to, 'Your JW Auto Clinic Receipt', html, { attachments });
+        // Prefer the client-provided PDF
+        const att = dataUrlToAttachment(receiptPdfBase64, receiptFileName);
+        await safeSendEmail(to, 'Your JW Auto Clinic Receipt', html, { attachments: att ? [att] : undefined });
         emailSent = true;
-      } else {
-        console.warn('Receipt email skipped: no valid email for customer/transaction.');
       }
     } catch (mailErr) {
       console.error('Email failed:', mailErr?.message || mailErr);
     }
 
-    res.json({ ok: true, savedCount: docs.length, emailSent });
+    // If nothing saved, do NOT pretend success
+    if (!savedCount) {
+      return res.status(400).json({ error: 'No transactions were saved.' });
+    }
+
+    res.json({ ok: true, savedCount, emailSent });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: err.message || 'Batch save failed.' });
+    res.status(500).json({ error: err?.message || 'Batch save failed.' });
   }
 });
-
 
 module.exports = router;
