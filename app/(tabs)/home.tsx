@@ -62,7 +62,7 @@ interface Transaction {
   updatedAt: string;
 }
 
-interface Employee {
+interface Worker {
   _id: string;
   name: string;
   email: string;
@@ -83,7 +83,7 @@ interface Expense {
 interface Shift {
   _id: string;
   id?: string;
-  employee: string;
+  worker: string;
   date: string;
   clockIn: string;
   clockOut?: string;
@@ -270,7 +270,7 @@ const ExportFabMenu: React.FC<{
 
 export default function HomeScreen() {
   const [selectedTab, setSelectedTab] = useState<
-    "Transactions" | "Employees" | "Shifts" | "Reports"
+    "Transactions" | "Workers" | "Shifts" | "Reports"
   >("Transactions");
   const [chartMode, setChartMode] = useState<"monthly" | "trend" | "methods"
   >("monthly");  
@@ -295,9 +295,9 @@ export default function HomeScreen() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const allTabs = ["Transactions", "Employees", "Shifts", "Reports"];
+  const allTabs = ["Transactions", "Workers", "Shifts", "Reports"];
   const visibleTabs = allTabs.filter((tab) =>
-    ["Employees", "Shifts", "Reports"].includes(tab)
+    ["Workers", "Shifts", "Reports"].includes(tab)
       ? user?.role === "admin"
       : true
   );
@@ -354,12 +354,12 @@ export default function HomeScreen() {
     }
   };
 
-  // Employees
-  const [employees, setEmployees] = useState<Employee[]>([]);
+  // Workers
+  const [workers, setEmployees] = useState<Worker[]>([]);
   const fetchEmployees = useCallback(async () => {
     try {
       const res = await fetch(
-        "https://jw-auto-clinic-246.onrender.com/api/employees",
+        "https://jw-auto-clinic-246.onrender.com/api/workers",
         {
           headers: { Authorization: `Bearer ${user?.token}` },
         }
@@ -367,14 +367,14 @@ export default function HomeScreen() {
       const data = await res.json();
       setEmployees(data);
     } catch (err) {
-      // console.error("Failed to fetch employees:", err);
+      // console.error("Failed to fetch workers:", err);
     }
   }, [user]);
 
   const [roleFilter, setRoleFilter] = useState<string | null>(null);
   const [clockedInFilter, setClockedInFilter] = useState<boolean | null>(null);
 
-  const filteredEmployees = employees.filter((emp) => {
+  const filteredEmployees = workers.filter((emp) => {
     const matchRole = roleFilter ? emp.role === roleFilter : true;
     const matchClocked =
       clockedInFilter !== null ? emp.clockedIn === clockedInFilter : true;
@@ -383,7 +383,7 @@ export default function HomeScreen() {
 
   const [editModalVisible, setEditModalVisible] = useState(false);
 
-  const employeesToCSV = (rows: Employee[]) => {
+  const employeesToCSV = (rows: Worker[]) => {
     const header = [
       "Name",
       "Email",
@@ -410,7 +410,7 @@ export default function HomeScreen() {
     return Number.isFinite(n) ? `$${n.toFixed(2)}` : "";
   };
 
-  const employeesToHTML = (rows: Employee[]) => `
+  const employeesToHTML = (rows: Worker[]) => `
     <html>
       <head>
         <meta name="viewport" content="width=device-width,initial-scale=1" />
@@ -423,7 +423,7 @@ export default function HomeScreen() {
         </style>
       </head>
       <body>
-        <h1>Employees</h1>
+        <h1>Workers</h1>
         <table>
           <thead>
             <tr>
@@ -451,10 +451,10 @@ export default function HomeScreen() {
     </html>
   `;
 
-  const exportEmployeesCSV = async (rows: Employee[]) => {
+  const exportEmployeesCSV = async (rows: Worker[]) => {
     try {
       const csv = employeesToCSV(rows);
-      const fileName = `employees-${new Date().toISOString().slice(0, 10)}.csv`;
+      const fileName = `workers-${new Date().toISOString().slice(0, 10)}.csv`;
       const uri = await writeTextFileAsync(fileName, csv);
       await shareFile(uri, "text/csv");
     } catch (e) {
@@ -464,7 +464,7 @@ export default function HomeScreen() {
   };
   
 
-  const exportEmployeesPDF = async (rows: Employee[]) => {
+  const exportEmployeesPDF = async (rows: Worker[]) => {
     try {
       const html = employeesToHTML(rows);
       const { uri } = await Print.printToFileAsync({ html });
@@ -475,13 +475,13 @@ export default function HomeScreen() {
     }
   };  
 
-  const emailEmployees = async (rows: Employee[]) => {
+  const emailEmployees = async (rows: Worker[]) => {
     try {
       const html = employeesToHTML(rows);
       const { uri } = await Print.printToFileAsync({ html });
       await composeEmailSafely({
-        subject: "Employees Export",
-        body: "Please find the employees export attached.",
+        subject: "Workers Export",
+        body: "Please find the workers export attached.",
         attachments: [uri],
       });
     } catch (e) {
@@ -527,7 +527,7 @@ export default function HomeScreen() {
     );
   };
 
-  const handleResetPassword = async (emp: Employee) => {
+  const handleResetPassword = async (emp: Worker) => {
     try {
       const confirm = await new Promise<boolean>((resolve) => {
         Alert.alert(
@@ -546,7 +546,7 @@ export default function HomeScreen() {
       if (!confirm) return;
 
       const res = await fetch(
-        `https://jw-auto-clinic-246.onrender.com/api/employees/${emp._id}/reset-password`,
+        `https://jw-auto-clinic-246.onrender.com/api/workers/${emp._id}/reset-password`,
         {
           method: "POST",
           headers: {
@@ -569,10 +569,10 @@ export default function HomeScreen() {
     }
   };
 
-  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(
+  const [selectedEmployee, setSelectedEmployee] = useState<Worker | null>(
     null
   );
-  const handleEditEmployee = (emp: Employee) => {
+  const handleEditEmployee = (emp: Worker) => {
     setSelectedEmployee(emp);
     setEditModalVisible(true);
   };
@@ -580,12 +580,12 @@ export default function HomeScreen() {
   const handleDeleteEmployee = async (id: string) => {
     if (Platform.OS === "windows" || Platform.OS === "web") {
       const confirm = window.confirm?.(
-        "Are you sure you want to delete this employee?"
+        "Are you sure you want to delete this worker?"
       );
       if (!confirm) return;
       try {
         const res = await fetch(
-          `https://jw-auto-clinic-246.onrender.com/api/employees/${id}`,
+          `https://jw-auto-clinic-246.onrender.com/api/workers/${id}`,
           {
             method: "DELETE",
             headers: { Authorization: `Bearer ${user?.token}` },
@@ -599,7 +599,7 @@ export default function HomeScreen() {
     } else {
       Alert.alert(
         "Confirm Delete",
-        "Are you sure you want to delete this employee?",
+        "Are you sure you want to delete this worker?",
         [
           { text: "Cancel", style: "cancel" },
           {
@@ -608,7 +608,7 @@ export default function HomeScreen() {
             onPress: async () => {
               try {
                 const res = await fetch(
-                  `https://jw-auto-clinic-246.onrender.com/api/employees/${id}`,
+                  `https://jw-auto-clinic-246.onrender.com/api/workers/${id}`,
                   {
                     method: "DELETE",
                     headers: { Authorization: `Bearer ${user?.token}` },
@@ -679,13 +679,13 @@ export default function HomeScreen() {
 
   // Build CSV from shifts
   const buildCsv = (rows: typeof sortedShifts) => {
-    const header = ["Employee", "Date", "Clock In", "Clock Out", "Status"].join(
+    const header = ["Worker", "Date", "Clock In", "Clock Out", "Status"].join(
       ","
     );
     const body = rows
       .map((r) =>
         [
-          r.employee ?? "",
+          r.worker ?? "",
           r.date ?? "",
           r.clockIn ?? "",
           r.clockOut ?? "",
@@ -716,14 +716,14 @@ export default function HomeScreen() {
         <h1>Shifts Report</h1>
         <table>
           <thead>
-            <tr><th>Employee</th><th>Date</th><th>Clock In</th><th>Clock Out</th><th>Status</th></tr>
+            <tr><th>Worker</th><th>Date</th><th>Clock In</th><th>Clock Out</th><th>Status</th></tr>
           </thead>
           <tbody>
             ${rows
               .map(
                 (r) => `
               <tr>
-                <td>${(r.employee ?? "").toString()}</td>
+                <td>${(r.worker ?? "").toString()}</td>
                 <td>${(r.date ?? "").toString()}</td>
                 <td>${(r.clockIn ?? "").toString()}</td>
                 <td>${(r.clockOut ?? "").toString()}</td>
@@ -1453,7 +1453,7 @@ export default function HomeScreen() {
     setTransactionModalVisible(false);
     setSelectedTx(null);
   };
-  const handleLongPress = (emp: Employee) => {
+  const handleLongPress = (emp: Worker) => {
     setSelectedEmployee(emp);
     setMoreActionsVisible(true);
   };
@@ -1491,13 +1491,13 @@ export default function HomeScreen() {
     .filter((shift) => (statusFilter ? shift.status === statusFilter : true))
     .filter((shift) =>
       shiftSearchText
-        ? shift.employee.toLowerCase().includes(shiftSearchText.toLowerCase())
+        ? shift.worker.toLowerCase().includes(shiftSearchText.toLowerCase())
         : true
     );
 
   const sortedShifts = [...filteredShifts].sort((a, b) => {
     if (shiftSortBy === "name")
-      return (a.employee || "").localeCompare(b.employee || "");
+      return (a.worker || "").localeCompare(b.worker || "");
     if (shiftSortBy === "status")
       return (a.status || "").localeCompare(b.status || "");
     if (shiftSortBy === "date") {
@@ -1516,7 +1516,7 @@ export default function HomeScreen() {
     let arr = base.filter((s) => {
       const okSearch = !shiftSearchText
         ? true
-        : norm(s.employee).includes(norm(shiftSearchText));
+        : norm(s.worker).includes(norm(shiftSearchText));
       const okStatus = statusFilter ? s.status === statusFilter : true;
       const t = toTime(s.date);
       const okDate =
@@ -1526,7 +1526,7 @@ export default function HomeScreen() {
     });
     if (shiftSortBy === "name")
       arr = [...arr].sort((a, b) =>
-        (a.employee || "").localeCompare(b.employee || "")
+        (a.worker || "").localeCompare(b.worker || "")
       );
     else if (shiftSortBy === "status")
       arr = [...arr].sort((a, b) =>
@@ -2591,7 +2591,7 @@ const earningsChartConfig = {
               </View>
 
               <TextInput
-                placeholder="Search by employee or customer"
+                placeholder="Search by worker or customer"
                 placeholderTextColor="#777"
                 value={transactionSearchText}
                 onChangeText={setTransactionSearchText}
@@ -2991,7 +2991,7 @@ const earningsChartConfig = {
           </>
         )}
 
-        {selectedTab === "Employees" && (
+        {selectedTab === "Workers" && (
           <View style={styles.recentCard}>
             {/* HEADER: Title, result count, clear filters */}
             <View style={{ marginBottom: 12 }}>
@@ -3002,7 +3002,7 @@ const earningsChartConfig = {
                   justifyContent: "space-between",
                 }}
               >
-                <Text style={styles.recentTitle}>Employee List</Text>
+                <Text style={styles.recentTitle}>Worker List</Text>
                 <View
                   style={{ flexDirection: "row", alignItems: "center", gap: 10 }}
                 >
@@ -3193,7 +3193,7 @@ const earningsChartConfig = {
             <ExportFabMenu
               visible={exportFabEmployeesOpen}
               onClose={() => setExportFabEmployeesOpen(false)}
-              title="Employees"
+              title="Workers"
               items={[
                 { icon: "document-text", label: "Export CSV", onPress: () => exportEmployeesCSV(sortedEmployees), disabled: !sortedEmployees.length },
                 { icon: "document",      label: "Export PDF", onPress: () => exportEmployeesPDF(sortedEmployees), disabled: !sortedEmployees.length },
@@ -3317,7 +3317,7 @@ const earningsChartConfig = {
                             <TouchableOpacity
                               onPress={() => {
                                 handleDeleteEmployee(emp._id);
-                                showToast("Employee deleted");
+                                showToast("Worker deleted");
                               }}
                             >
                               <Ionicons
@@ -3430,7 +3430,7 @@ const earningsChartConfig = {
                         <TouchableOpacity
                           onPress={() => {
                             handleDeleteEmployee(emp._id);
-                            showToast("Employee deleted");
+                            showToast("Worker deleted");
                           }}
                         >
                           <Ionicons name="trash-outline" size={20} color="red" />
@@ -3448,7 +3448,7 @@ const earningsChartConfig = {
           visible={editModalVisible}
           onClose={() => setEditModalVisible(false)}
           title={
-            selectedEmployee ? `Edit ${selectedEmployee.name}` : "Edit Employee"
+            selectedEmployee ? `Edit ${selectedEmployee.name}` : "Edit Worker"
           }
           maxHeight={500}
         >
@@ -3527,7 +3527,7 @@ const earningsChartConfig = {
 
                 try {
                   const res = await fetch(
-                    `https://jw-auto-clinic-246.onrender.com/api/employees/${selectedEmployee._id}`,
+                    `https://jw-auto-clinic-246.onrender.com/api/workers/${selectedEmployee._id}`,
                     {
                       method: "PUT",
                       headers: {
@@ -3538,13 +3538,13 @@ const earningsChartConfig = {
                     }
                   );
 
-                  if (!res.ok) throw new Error("Failed to update employee");
+                  if (!res.ok) throw new Error("Failed to update worker");
 
                   setEditModalVisible(false);
                   await fetchEmployees();
-                  showToast("Employee updated");
+                  showToast("Worker updated");
                 } catch (err) {
-                  Alert.alert("Update failed", "Unable to update employee.");
+                  Alert.alert("Update failed", "Unable to update worker.");
                   // console.error(err);
                 }
               }}
@@ -3708,7 +3708,7 @@ const earningsChartConfig = {
 
                     {/* Search Box */}
                     <TextInput
-                      placeholder="Search by employee name"
+                      placeholder="Search by worker name"
                       placeholderTextColor="#777"
                       value={shiftSearchText}
                       onChangeText={setShiftSearchText}
@@ -3965,7 +3965,7 @@ const earningsChartConfig = {
                   <View style={{ minWidth: 1200 }}>
                     <View style={[styles.tableRow, styles.tableHeader]}>
                       <Text style={[styles.columnHeader, { width: 140 }]}>
-                        Employee
+                        Worker
                       </Text>
                       <Text style={[styles.columnHeader, { width: 100 }]}>
                         Date
@@ -4050,7 +4050,7 @@ const earningsChartConfig = {
                                 { width: 140, fontWeight: "600" },
                               ]}
                             >
-                              {shift.employee}
+                              {shift.worker}
                             </Text>
                             <Text style={[styles.cell, { width: 100 }]}>
                               {shift.date}
@@ -4169,7 +4169,7 @@ const earningsChartConfig = {
                             }}
                           >
                             <Text style={{ fontWeight: "600", fontSize: 16 }}>
-                              {shift.employee}
+                              {shift.worker}
                             </Text>
                             <Text style={{ color: "#666", marginBottom: 4 }}>
                               {shift.date}
@@ -4422,7 +4422,7 @@ const earningsChartConfig = {
               <View style={styles.reportCard}>
                 <Text style={styles.cardLabel}>👥</Text>
                 <Text style={styles.cardValue}>{reportData.totalEmployees}</Text>
-                <Text style={styles.cardTitle}>Total Employees</Text>
+                <Text style={styles.cardTitle}>Total Workers</Text>
               </View>
 
               <View style={styles.reportCard}>
@@ -4548,7 +4548,7 @@ const earningsChartConfig = {
             return (
               <>
                 <Text style={styles.modalLine}>
-                  Employee: {selectedShift.employee}
+                  Worker: {selectedShift.worker}
                 </Text>
                 <Text style={styles.modalLine}>
                   Date: {selectedShift.date}

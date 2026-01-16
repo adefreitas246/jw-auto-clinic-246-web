@@ -1154,7 +1154,7 @@ export default function TransactionsScreen() {
   
             <table>
               <tr><th>Service</th><td>${serviceType}</td></tr>
-              <tr><th>Employee</th><td>${employeeName}</td></tr>
+              <tr><th>Worker</th><td>${employeeName}</td></tr>
               <tr><th>Payment Method</th><td>${paymentMethod}</td></tr>
               <tr><th>Special</th><td>${specials || 'None'}</td></tr>
               <tr><th>Original Price</th><td>$${op.toFixed(2)}</td></tr>
@@ -1276,7 +1276,7 @@ export default function TransactionsScreen() {
 
           <table>
             <tr><th>Service</th><td>${serviceType}</td></tr>
-            <tr><th>Employee</th><td>${employeeName}</td></tr>
+            <tr><th>Worker</th><td>${employeeName}</td></tr>
             <tr><th>Payment Method</th><td>${paymentMethod}</td></tr>
             <tr><th>Special</th><td>${specials || 'None'}</td></tr>
             <tr><th>Original Price</th><td>$${parseFloat(originalPrice).toFixed(2)}</td></tr>

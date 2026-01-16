@@ -2,7 +2,7 @@
 const mongoose = require('mongoose');
 
 const shiftSchema = new mongoose.Schema({
-  employee: { type: String, required: true, trim: true },
+  worker: { type: String, required: true, trim: true },
   date: { type: String, required: true, match: /^\d{4}-\d{2}-\d{2}$/ },
   clockIn: { type: String, required: true, trim: true },
   clockOut: { type: String, default: '', trim: true },

@@ -7,7 +7,7 @@ const cors = require("cors");
 const customersRouter = require('./routes/customers');
 const transactionsRouter = require('./routes/transactions');
 const authRouter = require('./routes/auth');
-const employeesRouter = require('./routes/employees');
+const employeesRouter = require('./routes/workers');
 const shiftsRouter = require('./routes/shifts');
 const profileRouter = require('./routes/profile');
 const reportRoutes = require('./routes/reports');
@@ -249,7 +249,7 @@ app.get("/auth/reset-password", (req, res) => {
 app.use('/api/customers', customersRouter);
 app.use('/api/transactions', transactionsRouter); 
 app.use('/api/auth', authRouter);
-app.use('/api/employees', employeesRouter);
+app.use('/api/workers', employeesRouter);
 app.use('/api/shifts', shiftsRouter);
 app.use('/api/profile', profileRouter);
 app.use('/api/reports', reportRoutes);

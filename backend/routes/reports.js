@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const authMiddleware = require('../middleware/authMiddleware');
 const Transaction = require('../models/Transaction');
-const Employee = require('../models/Employees');
+const Worker = require('../models/Workers');
 
 // GET /api/reports/dashboard
 router.get('/dashboard', authMiddleware, async (req, res) => {
@@ -17,8 +17,8 @@ router.get('/dashboard', authMiddleware, async (req, res) => {
     const [totalRevenueAgg, totalServices, totalEmployees, activeNow] = await Promise.all([
       Transaction.aggregate([{ $group: { _id: null, total: { $sum: { $toDouble: "$amount" } } } }]),
       Transaction.countDocuments(),
-      Employee.countDocuments(),
-      Employee.countDocuments({ clockedIn: true }),
+      Worker.countDocuments(),
+      Worker.countDocuments({ clockedIn: true }),
     ]);
 
     // Today's transactions, revenue, etc.

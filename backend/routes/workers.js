@@ -1,7 +1,7 @@
-// routes/employees.js
+// routes/workers.js
 const express = require('express');
 const router = express.Router();
-const Employee = require('../models/Employees');
+const Worker = require('../models/Workers');
 const authMiddleware = require('../middleware/authMiddleware');
 const crypto = require('crypto');
 const sendEmail = require('../utils/sendEmail');
@@ -13,35 +13,35 @@ const ensureAdmin = (req, res, next) => {
   next();
 };
 
-// GET all employees (sorted by creation)
+// GET all workers (sorted by creation)
 router.get('/', authMiddleware, async (req, res) => {
   try {
-    const employees = await Employee.find().sort({ createdAt: -1 });
-    res.json(employees);
+    const workers = await Worker.find().sort({ createdAt: -1 });
+    res.json(workers);
   } catch (err) {
-    res.status(500).json({ error: 'Failed to fetch employees' });
+    res.status(500).json({ error: 'Failed to fetch workers' });
   }
 });
 
-// GET a single employee
+// GET a single worker
 router.get('/:id', authMiddleware, async (req, res) => {
   try {
-    const employee = await Employee.findById(req.params.id);
-    if (!employee) return res.status(404).json({ error: 'Employee not found' });
+    const worker = await Worker.findById(req.params.id);
+    if (!worker) return res.status(404).json({ error: 'Worker not found' });
 
-    res.json(employee);
+    res.json(worker);
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
 });
 
-// POST create new employee
+// POST create new worker
 router.post('/', authMiddleware, async (req, res) => {
   try {
     const { name, email, phone, role, hourlyRate } = req.body;
     if (!name) return res.status(400).json({ error: 'Name is required' });
 
-    const newEmployee = new Employee({
+    const newEmployee = new Worker({
       name,
       email,
       phone,
@@ -64,12 +64,12 @@ router.post('/', authMiddleware, async (req, res) => {
 // PATCH toggle clock in/out
 router.patch('/:id/clock', authMiddleware, async (req, res) => {
   try {
-    const employee = await Employee.findById(req.params.id);
-    if (!employee) return res.status(404).json({ error: 'Employee not found' });
+    const worker = await Worker.findById(req.params.id);
+    if (!worker) return res.status(404).json({ error: 'Worker not found' });
 
-    employee.clockedIn = !employee.clockedIn;
-    await employee.save();
-    res.json(employee);
+    worker.clockedIn = !worker.clockedIn;
+    await worker.save();
+    res.json(worker);
   } catch (err) {
     res.status(500).json({ error: 'Failed to toggle clock status' });
   }
@@ -81,23 +81,23 @@ const generateTempPassword = () => crypto.randomBytes(8).toString('base64url');
 router.post('/:id/reset-password', authMiddleware, ensureAdmin, async (req, res) => {
   try {
     const { notify = false } = req.body || {};
-    const employee = await Employee.findById(req.params.id);
-    if (!employee) return res.status(404).json({ error: 'Employee not found' });
+    const worker = await Worker.findById(req.params.id);
+    if (!worker) return res.status(404).json({ error: 'Worker not found' });
 
     // ✅ Just set plaintext; your schema will hash it on save
     const temporaryPassword = generateTempPassword();
-    employee.password = temporaryPassword;
+    worker.password = temporaryPassword;
 
-    await employee.save(); // triggers employeeSchema.pre('save') to hash
+    await worker.save(); // triggers employeeSchema.pre('save') to hash
 
     let emailed = false;
-    if (notify && employee.email) {
+    if (notify && worker.email) {
       try {
         await sendEmail({
-          to: employee.email,
+          to: worker.email,
           subject: 'Your password has been reset',
           html: `
-            <p>Hi ${employee.name || 'there'},</p>
+            <p>Hi ${worker.name || 'there'},</p>
             <p>An administrator reset your password.</p>
             <p>Your temporary password is:</p>
             <p style="font-size:16px;"><b>${temporaryPassword}</b></p>
@@ -117,11 +117,11 @@ router.post('/:id/reset-password', authMiddleware, ensureAdmin, async (req, res)
   }
 });
 
-// PUT update an employee
+// PUT update an worker
 router.put('/:id', authMiddleware, async (req, res) => {
   try {
-    const updated = await Employee.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    if (!updated) return res.status(404).json({ error: 'Employee not found' });
+    const updated = await Worker.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (!updated) return res.status(404).json({ error: 'Worker not found' });
 
     res.json(updated);
   } catch (err) {
@@ -129,13 +129,13 @@ router.put('/:id', authMiddleware, async (req, res) => {
   }
 });
 
-// DELETE employee
+// DELETE worker
 router.delete('/:id', authMiddleware, async (req, res) => {
   try {
-    const deleted = await Employee.findByIdAndDelete(req.params.id);
-    if (!deleted) return res.status(404).json({ error: 'Employee not found' });
+    const deleted = await Worker.findByIdAndDelete(req.params.id);
+    if (!deleted) return res.status(404).json({ error: 'Worker not found' });
 
-    res.json({ message: 'Employee deleted' });
+    res.json({ message: 'Worker deleted' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

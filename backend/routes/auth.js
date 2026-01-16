@@ -5,7 +5,7 @@ const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 
 const User = require('../models/Users');
-const Employee = require('../models/Employees');
+const Worker = require('../models/Workers');
 const PasswordResetToken = require('../models/PasswordResetToken');
 const sendEmail = require('../utils/sendEmail');
 
@@ -24,7 +24,7 @@ router.post('/register', async (req, res) => {
   }
 });
 
-// POST /api/auth/login (User or Employee)
+// POST /api/auth/login (User or Worker)
 router.post('/login', async (req, res) => {
   try {
     const { email = '', password = '' } = req.body;
@@ -50,21 +50,21 @@ router.post('/login', async (req, res) => {
       });
     }
 
-    // Then Employee
-    const employee = await Employee.findOne({ email: normalizedEmail });
-    if (employee && (await employee.comparePassword(password))) {
+    // Then Worker
+    const worker = await Worker.findOne({ email: normalizedEmail });
+    if (worker && (await worker.comparePassword(password))) {
       const token = jwt.sign(
-        { userId: employee._id, role: employee.role, name: employee.name, type: 'Employee' },
+        { userId: worker._id, role: worker.role, name: worker.name, type: 'Worker' },
         JWT_SECRET,
         { expiresIn: '7d' }
       );
       return res.json({
-        _id: employee._id,
-        name: employee.name,
-        email: employee.email,
-        role: employee.role,
+        _id: worker._id,
+        name: worker.name,
+        email: worker.email,
+        role: worker.role,
         token,
-        type: 'Employee',
+        type: 'Worker',
       });
     }
 
@@ -75,7 +75,7 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// POST /api/auth/forgot-password (User or Employee)
+// POST /api/auth/forgot-password (User or Worker)
 router.post('/forgot-password', async (req, res) => {
   const { email } = req.body;
   if (!email) return res.status(400).json({ error: 'Email is required' });
@@ -85,8 +85,8 @@ router.post('/forgot-password', async (req, res) => {
     let account = await User.findOne({ email });
     let accountType = 'User';
     if (!account) {
-      account = await Employee.findOne({ email });
-      accountType = account ? 'Employee' : null;
+      account = await Worker.findOne({ email });
+      accountType = account ? 'Worker' : null;
     }
 
     // Always return the same response (avoid enumeration)
@@ -160,7 +160,7 @@ router.post('/forgot-password', async (req, res) => {
 });
 
 
-// POST /api/auth/reset-password (User or Employee)
+// POST /api/auth/reset-password (User or Worker)
 router.post('/reset-password', async (req, res) => {
   const { token, password } = req.body;
   if (!token || !password) {
@@ -178,7 +178,7 @@ router.post('/reset-password', async (req, res) => {
     // Load account by type
     let account = null;
     if (record.accountType === 'User') account = await User.findById(record.accountId);
-    if (record.accountType === 'Employee') account = await Employee.findById(record.accountId);
+    if (record.accountType === 'Worker') account = await Worker.findById(record.accountId);
     if (!account) {
       await PasswordResetToken.deleteOne({ _id: record._id });
       return res.status(404).json({ error: 'Account not found.' });

@@ -28,7 +28,7 @@ Animatable.initializeRegistryWithDefinitions({
 const TAB_ICONS: Record<string, { icon: string; label: string; animation: string }> = {
   home: { icon: 'home', label: 'Home', animation: 'wiggle' },
   transactions: { icon: 'add-circle', label: 'Add', animation: 'pulse' },
-  employees: { icon: 'person', label: 'Employees', animation: 'rubberBand' },
+  workers: { icon: 'person', label: 'Workers', animation: 'rubberBand' },
   settings: { icon: 'settings', label: 'Settings', animation: 'flipInY' },
 };
 
@@ -43,7 +43,7 @@ export const CustomTabBar = ({ state, descriptors, navigation }: BottomTabBarPro
   const isWeb = Platform.OS === 'web';
 
   const tabVisibility: Record<string, boolean> = {
-    employees: user?.role === 'admin',
+    workers: user?.role === 'admin',
     // other tabs visible by default
   };
 

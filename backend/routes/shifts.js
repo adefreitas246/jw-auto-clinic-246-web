@@ -79,13 +79,13 @@ router.get('/', authMiddleware, async (req, res) => {
   }
 });
 
-// GET last active shift for an employee (exclude deleted)
+// GET last active shift for an worker (exclude deleted)
 router.get('/last/:name', authMiddleware, async (req, res) => {
   try {
     const { name } = req.params;
 
     const shift = await Shift.findOne({
-      employee: name,
+      worker: name,
       status: 'Active',
       deletedAt: null,
     })
@@ -102,10 +102,10 @@ router.get('/last/:name', authMiddleware, async (req, res) => {
 // POST new clock-in
 router.post('/', authMiddleware, async (req, res) => {
   try {
-    const { employee, date, clockIn } = req.body;
+    const { worker, date, clockIn } = req.body;
 
     const newShift = new Shift({
-      employee,
+      worker,
       date,
       clockIn,
       clockOut: '',

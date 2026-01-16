@@ -26,7 +26,7 @@ import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
 
 type Role = "admin" | "staff";
 
-interface Employee {
+interface Worker {
   _id: string;
   name: string;
   email: string;
@@ -38,7 +38,7 @@ interface Employee {
 
 interface Shift {
   _id: string;
-  employee: string;
+  worker: string;
   date: string;        // "YYYY-MM-DD"
   clockIn: string;     // "01:23:45 PM"
   clockOut?: string;   // undefined if active
@@ -133,7 +133,7 @@ function EmployeesScreen() {
   
 
   // ---------- Data ----------
-  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [workers, setEmployees] = useState<Worker[]>([]);
   const [loading, setLoading] = useState(true);
   const [shifts, setShifts] = useState<Shift[]>([]);
   const [tick, setTick] = useState(0);
@@ -176,7 +176,7 @@ function EmployeesScreen() {
   const [lunchingIds, setLunchingIds] = useState<Set<string>>(new Set());
   const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
   const [editVisible, setEditVisible] = useState(false);
-  const [editing, setEditing] = useState<Employee | null>(null);
+  const [editing, setEditing] = useState<Worker | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   // ---------- Helpers ----------
@@ -184,13 +184,13 @@ function EmployeesScreen() {
 
   const fetchEmployees = useCallback(async () => {
     try {
-      const res = await fetch(`${api}/api/employees`, {
+      const res = await fetch(`${api}/api/workers`, {
         headers: { Authorization: `Bearer ${user?.token}` },
       });
       const data = await res.json();
       setEmployees(Array.isArray(data) ? data : []);
     } catch (err) {
-      // console.error("Error fetching employees", err);
+      // console.error("Error fetching workers", err);
     } finally {
       setLoading(false);
     }
@@ -286,8 +286,8 @@ function EmployeesScreen() {
   const shiftsByEmployee = useMemo(() => {
     const map = new Map<string, Shift[]>();
     for (const s of shifts) {
-      if (!map.has(s.employee)) map.set(s.employee, []);
-      map.get(s.employee)!.push(s);
+      if (!map.has(s.worker)) map.set(s.worker, []);
+      map.get(s.worker)!.push(s);
     }
     for (const [k, arr] of map.entries()) {
       arr.sort((a, b) => +shiftStart(b) - +shiftStart(a));
@@ -298,7 +298,7 @@ function EmployeesScreen() {
 
   const filteredEmployees = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
-    return employees.filter((e) => {
+    return workers.filter((e) => {
       const matchesRole = roleFilter === "all" ? true : e.role === roleFilter;
       const matchesQuery =
         !q ||
@@ -307,9 +307,9 @@ function EmployeesScreen() {
         (e.phone || "").toLowerCase().includes(q);
       return matchesRole && matchesQuery;
     });
-  }, [employees, roleFilter, searchQuery]);
+  }, [workers, roleFilter, searchQuery]);
 
-  // First two "rows" are not employees: a sticky title bar and the mobile header block.
+  // First two "rows" are not workers: a sticky title bar and the mobile header block.
   // Row 0 will be sticky like Settings' header.
   const dataCards = useMemo(() => {
     if (useInlineStickyHeader) {
@@ -375,7 +375,7 @@ function EmployeesScreen() {
     if (!valid) { setSubmitting(false); return; }
 
     try {
-      const res = await fetch(`${api}/api/employees`, {
+      const res = await fetch(`${api}/api/workers`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -393,7 +393,7 @@ function EmployeesScreen() {
 
       if (!res.ok) {
         const error = await res.json();
-        throw new Error(error?.error || "Failed to add employee");
+        throw new Error(error?.error || "Failed to add worker");
       }
 
       try { await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); } catch {}
@@ -407,7 +407,7 @@ function EmployeesScreen() {
       Keyboard.dismiss();
     } catch (err) {
       // console.error(err);
-      Alert.alert("Error", "Could not add employee.");
+      Alert.alert("Error", "Could not add worker.");
     } finally {
       setSubmitting(false);
     }
@@ -420,7 +420,7 @@ function EmployeesScreen() {
     setNameError(""); setEmailError(""); setPhoneError(""); setRoleError(""); setHourlyRateError("");
   };
 
-  const handleClockInOut = async (emp: Employee) => {
+  const handleClockInOut = async (emp: Worker) => {
     if (clockingIds.has(emp._id)) return;
     const setIds = new Set(clockingIds); setIds.add(emp._id); setClockingIds(setIds);
 
@@ -435,7 +435,7 @@ function EmployeesScreen() {
         await fetch(`${api}/api/shifts`, {
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${user?.token}` },
-          body: JSON.stringify({ employee: emp.name, date: dateStr, clockIn: timeStr }),
+          body: JSON.stringify({ worker: emp.name, date: dateStr, clockIn: timeStr }),
         });
       } else {
         const res = await fetch(`${api}/api/shifts/last/${encodeURIComponent(emp.name)}`, {
@@ -451,7 +451,7 @@ function EmployeesScreen() {
         }
       }
 
-      await fetch(`${api}/api/employees/${emp._id}/clock`, {
+      await fetch(`${api}/api/workers/${emp._id}/clock`, {
         method: "PATCH",
         headers: { Authorization: `Bearer ${user?.token}` },
       });
@@ -467,7 +467,7 @@ function EmployeesScreen() {
     }
   };
 
-  const handleLunchToggle = async (emp: Employee) => {
+  const handleLunchToggle = async (emp: Worker) => {
     if (lunchingIds.has(emp._id)) return;
     const setIds = new Set(lunchingIds); setIds.add(emp._id); setLunchingIds(setIds);
 
@@ -526,8 +526,8 @@ function EmployeesScreen() {
     }
   };
 
-  const confirmDelete = (emp: Employee) => {
-    Alert.alert("Delete Employee", `Delete ${emp.name}? This cannot be undone.`, [
+  const confirmDelete = (emp: Worker) => {
+    Alert.alert("Delete Worker", `Delete ${emp.name}? This cannot be undone.`, [
       { text: "Cancel", style: "cancel" },
       { text: "Delete", style: "destructive", onPress: () => deleteEmployee(emp._id) },
     ]);
@@ -536,20 +536,20 @@ function EmployeesScreen() {
   const deleteEmployee = async (id: string) => {
     setDeletingId(id);
     try {
-      const res = await fetch(`${api}/api/employees/${id}`, {
+      const res = await fetch(`${api}/api/workers/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${user?.token}` },
       });
       if (!res.ok) throw new Error("Delete failed");
       await refetchAll();
     } catch {
-      Alert.alert("Error", "Could not delete employee.");
+      Alert.alert("Error", "Could not delete worker.");
     } finally {
       setDeletingId(null);
     }
   };
 
-  const openEdit = (emp: Employee) => {
+  const openEdit = (emp: Worker) => {
     setEditing({
       ...emp,
       role: (emp.role as Role) || "staff",
@@ -560,7 +560,7 @@ function EmployeesScreen() {
   const saveEdit = async () => {
     if (!editing) return;
     try {
-      const res = await fetch(`${api}/api/employees/${editing._id}`, {
+      const res = await fetch(`${api}/api/workers/${editing._id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${user?.token}` },
         body: JSON.stringify({
@@ -576,7 +576,7 @@ function EmployeesScreen() {
       setEditing(null);
       await refetchAll();
     } catch {
-      Alert.alert("Error", "Could not update employee.");
+      Alert.alert("Error", "Could not update worker.");
     }
   };
 
@@ -604,7 +604,7 @@ function EmployeesScreen() {
         <View style={[styles.headerRow, isWeb && styles.headerRowWeb]}>
           {/* no-wrap big title */}
           <Text style={styles.largeTitle} numberOfLines={1} ellipsizeMode="tail">
-            Employees
+            Workers
           </Text>
 
           {isWeb ? (
@@ -612,11 +612,11 @@ function EmployeesScreen() {
               onPress={() => setAddVisible(true)}
               style={styles.webPrimaryBtn}
               accessibilityRole="button"
-              accessibilityLabel="Add employee"
+              accessibilityLabel="Add worker"
             >
               <Ionicons name="person-add-outline" size={18} color="#fff" />
               <Text style={styles.webPrimaryBtnText} numberOfLines={1} ellipsizeMode="tail">
-                Add Employee
+                Add Worker
               </Text>
             </TouchableOpacity>
           ) : (
@@ -634,18 +634,18 @@ function EmployeesScreen() {
   const MobileListHeader = useMemo(
     () => (
       <View>
-        {/* On tablets, show the big title here (phones already have StickyMobileHeader) */}
-        {!useInlineStickyHeader && (
+        {/* Native tablets only. Web already has HeaderBand. */}
+        {!useInlineStickyHeader && !isWeb && (
           <View style={{ marginBottom: 8, paddingHorizontal: 4 }}>
             <Text style={styles.largeTitle} numberOfLines={1} ellipsizeMode="tail">
-              Employees
+              Workers
             </Text>
           </View>
         )}
   
         <View style={[styles.card, styles.summaryCard]}>
           <View style={styles.summaryItem}>
-            <Text style={styles.summaryNum}>{employees.filter(e => e.clockedIn).length}</Text>
+            <Text style={styles.summaryNum}>{workers.filter(e => e.clockedIn).length}</Text>
             <Text style={styles.summaryLabel}>Active now</Text>
           </View>
           <View style={styles.summaryItem}>
@@ -655,11 +655,11 @@ function EmployeesScreen() {
             <Text style={styles.summaryLabel}>On lunch</Text>
           </View>
           <View style={styles.summaryItem}>
-            <Text style={styles.summaryNum}>{employees.filter(e => String(e.role) === "staff").length}</Text>
+            <Text style={styles.summaryNum}>{workers.filter(e => String(e.role) === "staff").length}</Text>
             <Text style={styles.summaryLabel}>Staff</Text>
           </View>
           <View style={styles.summaryItem}>
-            <Text style={styles.summaryNum}>{employees.filter(e => String(e.role) === "admin").length}</Text>
+            <Text style={styles.summaryNum}>{workers.filter(e => String(e.role) === "admin").length}</Text>
             <Text style={styles.summaryLabel}>Admins</Text>
           </View>
         </View>
@@ -708,7 +708,7 @@ function EmployeesScreen() {
       </View>
     ),
     [
-      employees,
+      workers,
       shifts,
       searchQuery,
       roleFilter,
@@ -716,6 +716,7 @@ function EmployeesScreen() {
       isWide,
       filteredEmployees.length,
       useInlineStickyHeader,
+      isWeb,
     ]
   );
   
@@ -760,7 +761,7 @@ function EmployeesScreen() {
 
           <View style={styles.webChipsRow}>
             <View style={[styles.webChip, styles.webChipGreen]}>
-              <Text style={styles.webChipText}>Active {employees.filter(e => e.clockedIn).length}</Text>
+              <Text style={styles.webChipText}>Active {workers.filter(e => e.clockedIn).length}</Text>
             </View>
             <View style={[styles.webChip, styles.webChipBlue]}>
               <Text style={styles.webChipText}>
@@ -768,16 +769,16 @@ function EmployeesScreen() {
               </Text>
             </View>
             <View style={styles.webChip}>
-              <Text style={styles.webChipText}>Staff {employees.filter(e => String(e.role) === "staff").length}</Text>
+              <Text style={styles.webChipText}>Staff {workers.filter(e => String(e.role) === "staff").length}</Text>
             </View>
             <View style={styles.webChip}>
-              <Text style={styles.webChipText}>Admins {employees.filter(e => String(e.role) === "admin").length}</Text>
+              <Text style={styles.webChipText}>Admins {workers.filter(e => String(e.role) === "admin").length}</Text>
             </View>
           </View>
         </View>
 
         <View style={styles.webTableHeader}>
-          <Text style={[styles.webTh, { flex: 2 }]} numberOfLines={1}>Employee</Text>
+          <Text style={[styles.webTh, { flex: 2 }]} numberOfLines={1}>Worker</Text>
           <Text style={[styles.webTh, { flex: 2 }]} numberOfLines={1}>Email</Text>
           <Text style={[styles.webTh, { flex: 1.5 }]} numberOfLines={1}>Phone</Text>
           <Text style={[styles.webTh, { flex: 1 }]} numberOfLines={1}>Role</Text>
@@ -786,7 +787,7 @@ function EmployeesScreen() {
         </View>
       </View>
     </View>
-  ), [employees, shifts, searchQuery, roleFilter, openRoleFilter]);
+  ), [workers, shifts, searchQuery, roleFilter, openRoleFilter]);
 
   // --- Sticky mobile header (matches Settings) ---
   const StickyMobileHeader = useMemo(
@@ -798,7 +799,7 @@ function EmployeesScreen() {
         ]}
       >
         <Text style={styles.largeTitle} numberOfLines={1} ellipsizeMode="tail">
-          Employees
+          Workers
         </Text>
       </View>
     ),
@@ -806,7 +807,7 @@ function EmployeesScreen() {
   );
 
   // ---------- Item renderer (cards for native) ----------
-  const renderMobileCard = ({ item }: { item: Employee }) => {
+  const renderMobileCard = ({ item }: { item: Worker }) => {
     const emp = item;
     const empShifts = shiftsByEmployee.get(emp.name) || [];
     const last = empShifts[0];
@@ -952,7 +953,7 @@ function EmployeesScreen() {
   };
 
   // ---------- Web table row (compact + zebra) ----------
-  const renderWebRow = ({ item: emp, index }: { item: Employee; index: number }) => {
+  const renderWebRow = ({ item: emp, index }: { item: Worker; index: number }) => {
     const empShifts = shiftsByEmployee.get(emp.name) || [];
     const last = empShifts[0];
     const active = !!last && !last.clockOut;
@@ -960,7 +961,7 @@ function EmployeesScreen() {
 
     return (
       <View style={[styles.webTr, index % 2 === 1 && styles.webTrAlt]}>
-        {/* Employee */}
+        {/* Worker */}
         <View style={[styles.webTd, { flex: 2, gap: 8, alignItems: "center", flexDirection: "row" }]}>
           <View style={[styles.webDot, active ? styles.webDotOn : styles.webDotOff]} />
           <Text style={styles.webName} numberOfLines={1} ellipsizeMode="tail">{emp.name}</Text>
@@ -1036,7 +1037,7 @@ function EmployeesScreen() {
     );
   };
 
-  const renderRightActions = (emp: Employee) => (
+  const renderRightActions = (emp: Worker) => (
     <View style={styles.swipeActions}>
       <TouchableOpacity
         style={[styles.swipeBtn, { backgroundColor: "#fbbf24" }]}
@@ -1117,7 +1118,7 @@ function EmployeesScreen() {
               data={dataCards}
               key={`cards-${columns}-${isWebCards ? "narrow" : "wide"}`}
               keyExtractor={(item: any) =>
-                (item as any)?.__type ? `k-${(item as any).__type}` : (item as Employee)._id
+                (item as any)?.__type ? `k-${(item as any).__type}` : (item as Worker)._id
               }
               numColumns={columns}
               columnWrapperStyle={columns > 1 ? { gap: 12, alignItems: "flex-start" } : undefined}
@@ -1151,7 +1152,7 @@ function EmployeesScreen() {
               ListEmptyComponent={
                 !loading ? (
                   <View style={{ padding: 24 }}>
-                    <Text style={{ color: "#666" }}>No employees match your filters.</Text>
+                    <Text style={{ color: "#666" }}>No workers match your filters.</Text>
                   </View>
                 ) : null
               }
@@ -1165,7 +1166,7 @@ function EmployeesScreen() {
             <TouchableOpacity
               style={styles.fab}
               onPress={() => setAddVisible(true)}
-              accessibilityLabel="Add employee"
+              accessibilityLabel="Add worker"
             >
               <Ionicons name="add" size={28} color="#fff" />
             </TouchableOpacity>
@@ -1173,7 +1174,7 @@ function EmployeesScreen() {
         )}
 
 
-        {/* Add Employee Bottom Sheet */}
+        {/* Add Worker Bottom Sheet */}
         <Modal
           visible={addVisible}
           transparent
@@ -1207,7 +1208,7 @@ function EmployeesScreen() {
                   keyboardShouldPersistTaps="handled"
                   contentContainerStyle={{ paddingBottom: 24 }}
                 >
-                  <Text style={styles.sectionTitle} numberOfLines={1} ellipsizeMode="tail">Add Employee</Text>
+                  <Text style={styles.sectionTitle} numberOfLines={1} ellipsizeMode="tail">Add Worker</Text>
 
                   <View style={[styles.row, !isWeb && isWide && styles.rowWide]}>
                     <View style={[styles.col, !isWeb && isWide && styles.half]}>
@@ -1320,10 +1321,10 @@ function EmployeesScreen() {
                       onPress={handleAddEmployee}
                       disabled={submitting}
                       accessibilityRole="button"
-                      accessibilityLabel="Add employee"
+                      accessibilityLabel="Add worker"
                     >
                       <Ionicons name="person-add-outline" size={18} color="#fff" />
-                      <Text style={styles.primaryBtnText} numberOfLines={1}>{submitting ? "Saving…" : "Add Employee"}</Text>
+                      <Text style={styles.primaryBtnText} numberOfLines={1}>{submitting ? "Saving…" : "Add Worker"}</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity style={styles.secondaryBtn} onPress={clearForm} accessibilityRole="button" accessibilityLabel="Clear form">
@@ -1363,7 +1364,7 @@ function EmployeesScreen() {
                   keyboardShouldPersistTaps="handled"
                   contentContainerStyle={{ paddingBottom: 24 }}
                 >
-                  <Text style={styles.sectionTitle} numberOfLines={1} ellipsizeMode="tail">Add Employee</Text>
+                  <Text style={styles.sectionTitle} numberOfLines={1} ellipsizeMode="tail">Add Worker</Text>
 
                   <View style={[styles.row, !isWeb && isWide && styles.rowWide]}>
                     <View style={[styles.col, !isWeb && isWide && styles.half]}>
@@ -1476,10 +1477,10 @@ function EmployeesScreen() {
                       onPress={handleAddEmployee}
                       disabled={submitting}
                       accessibilityRole="button"
-                      accessibilityLabel="Add employee"
+                      accessibilityLabel="Add worker"
                     >
                       <Ionicons name="person-add-outline" size={18} color="#fff" />
-                      <Text style={styles.primaryBtnText} numberOfLines={1}>{submitting ? "Saving…" : "Add Employee"}</Text>
+                      <Text style={styles.primaryBtnText} numberOfLines={1}>{submitting ? "Saving…" : "Add Worker"}</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity style={styles.secondaryBtn} onPress={clearForm} accessibilityRole="button" accessibilityLabel="Clear form">
@@ -1530,7 +1531,7 @@ function EmployeesScreen() {
                   keyboardShouldPersistTaps="handled"
                   contentContainerStyle={{ paddingBottom: 24 }}
                 >
-                  <Text style={styles.sectionTitle} numberOfLines={1} ellipsizeMode="tail">Edit Employee</Text>
+                  <Text style={styles.sectionTitle} numberOfLines={1} ellipsizeMode="tail">Edit Worker</Text>
                   {editing && (
                     <>
                       <Text style={styles.label} numberOfLines={1}>Full Name</Text>
@@ -1636,7 +1637,7 @@ function EmployeesScreen() {
                   keyboardShouldPersistTaps="handled"
                   contentContainerStyle={{ paddingBottom: 24 }}
                 >
-                  <Text style={styles.sectionTitle} numberOfLines={1} ellipsizeMode="tail">Edit Employee</Text>
+                  <Text style={styles.sectionTitle} numberOfLines={1} ellipsizeMode="tail">Edit Worker</Text>
                   {editing && (
                     <>
                       <Text style={styles.label} numberOfLines={1}>Full Name</Text>
@@ -1893,7 +1894,7 @@ const styles = StyleSheet.create({
   },
   secondaryBtnText: { color: "#333", fontWeight: "700" },
 
-  // Employee card (mobile)
+  // Worker card (mobile)
   employeeCard: {
     flex: 1,
     minWidth: 0,

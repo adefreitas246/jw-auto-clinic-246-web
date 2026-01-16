@@ -12,7 +12,7 @@ export type User = {
   phone?: string;
   avatar?: string | null;
   notificationsEnabled?: boolean;
-  // accountType?: 'User' | 'Employee'; // optional if you ever want it in state
+  // accountType?: 'User' | 'Worker'; // optional if you ever want it in state
 };
 
 interface AuthContextProps {

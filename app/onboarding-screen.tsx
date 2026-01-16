@@ -4,22 +4,22 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import React, { useCallback, useMemo, useRef, useState } from "react";
 import {
-    Dimensions,
-    Image,
-    Platform,
-    StatusBar,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Dimensions,
+  Image,
+  Platform,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import Animated, {
-    Extrapolate,
-    interpolate,
-    useAnimatedScrollHandler,
-    useAnimatedStyle,
-    useSharedValue,
-    type SharedValue,
+  Extrapolate,
+  interpolate,
+  useAnimatedScrollHandler,
+  useAnimatedStyle,
+  useSharedValue,
+  type SharedValue,
 } from "react-native-reanimated";
 
 const { width, height } = Dimensions.get("window");
@@ -41,7 +41,7 @@ const SLIDES: Slide[] = [
     gradient: ["#6a0dad", "#b07cf2"],
   },
   {
-    key: "home-employees",
+    key: "home-workers",
     title: "Manage Staff",
     subtitle: "Filter by role, edit details, export lists.",
     image: require("@/assets/images/onboarding/HomeDashboardEmployees.jpeg"),
@@ -83,15 +83,15 @@ const SLIDES: Slide[] = [
     gradient: ["#6a0dad", "#b07cf2"],
   },
   {
-    key: "employees-mgmt-1",
+    key: "workers-mgmt-1",
     title: "Quick Actions",
     subtitle: "Clock-in, lunch, and history from each card.",
     image: require("@/assets/images/onboarding/EmployeesManagement.jpeg"),
     gradient: ["#6a0dad", "#22d3ee"],
   },
   {
-    key: "employees-mgmt-2",
-    title: "Add Employees",
+    key: "workers-mgmt-2",
+    title: "Add Workers",
     subtitle: "Role-based setup with auto-formatted phone.",
     image: require("@/assets/images/onboarding/EmployeesManagement2.jpeg"),
     gradient: ["#6a0dad", "#84cc16"],

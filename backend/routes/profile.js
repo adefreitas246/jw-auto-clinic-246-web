@@ -2,14 +2,14 @@
 const express = require('express');
 const router = express.Router();
 const User = require('../models/Users');
-const Employee = require('../models/Employees');
+const Worker = require('../models/Workers');
 const authenticate = require('../middleware/authMiddleware');
 
 // Helper: pick model based on JWT "type"
 function getAccountContext(req) {
   const id = req.user?.userId || req.user?.id; // support either field name
-  const type = req.user?.type === 'Employee' ? 'Employee' : 'User';
-  const Model = type === 'Employee' ? Employee : User;
+  const type = req.user?.type === 'Worker' ? 'Worker' : 'User';
+  const Model = type === 'Worker' ? Worker : User;
   return { id, type, Model };
 }
 
@@ -19,7 +19,7 @@ router.put('/', authenticate, async (req, res) => {
   const { name, email, phone, avatar, notificationsEnabled } = req.body;
 
   try {
-    // Whitelist fields (Employees may not have avatar/notificationsEnabled in schema; that’s fine)
+    // Whitelist fields (Workers may not have avatar/notificationsEnabled in schema; that’s fine)
     const update = {};
     if (name !== undefined) update.name = name;
     if (email !== undefined) update.email = email;
@@ -40,7 +40,7 @@ router.put('/', authenticate, async (req, res) => {
       name: updated.name || '',
       email: updated.email || '',
       phone: updated.phone || '',
-      avatar: updated.avatar || '',                        // Employees: will be '' unless you add to schema
+      avatar: updated.avatar || '',                        // Workers: will be '' unless you add to schema
       role: updated.role,
       notificationsEnabled:
         typeof updated.notificationsEnabled === 'boolean'

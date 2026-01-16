@@ -46,7 +46,7 @@ const WHATS_NEW_URL =
         { type: "New", text: "Enhanced earnings and payment-method charts with tap-to-filter behavior and active-point display." },
         { type: "New", text: "Chart segment control now resets the detail view until you tap a new point in the current segment." },
   
-        { type: "Improved", text: "Tablet layouts refined for Employees, Transactions, Settings, and other screens in portrait and landscape." },
+        { type: "Improved", text: "Tablet layouts refined for Workers, Transactions, Settings, and other screens in portrait and landscape." },
         { type: "Improved", text: "Sticky headers adjusted for better full-width appearance, spacing, and elevation while scrolling." },
         { type: "Improved", text: "Floating action buttons now show correctly on Android landscape and tablet orientations." },
         { type: "Improved", text: "Bottom sheets and modals behave better with the keyboard, keeping content visible while typing." },
@@ -70,7 +70,7 @@ const WHATS_NEW_URL =
       changes: [
         {
           type: "Improved",
-          text: "Employee hourly-rate field now supports fractional values such as 9.375 per hour for more accurate pay setups.",
+          text: "Worker hourly-rate field now supports fractional values such as 9.375 per hour for more accurate pay setups.",
         },
         {
           type: "Fixed",
@@ -78,7 +78,7 @@ const WHATS_NEW_URL =
         },
         {
           type: "Improved",
-          text: "UI/UX updates across the Add, Employees, and Settings tabs for a cleaner and more consistent experience.",
+          text: "UI/UX updates across the Add, Workers, and Settings tabs for a cleaner and more consistent experience.",
         },
         {
           type: "Improved",
@@ -103,7 +103,7 @@ const WHATS_NEW_URL =
       version: "1.1.0",
       date: "2025-08-05",
       changes: [
-        { type: "New", text: "Employee and Shifts screens now refresh more reliably." },
+        { type: "New", text: "Worker and Shifts screens now refresh more reliably." },
       ],
     },
   ];

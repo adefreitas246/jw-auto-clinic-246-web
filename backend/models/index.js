@@ -1,7 +1,7 @@
 // models/index.js
 const User = require('./Users');
 const Transaction = require('./Transaction');
-const Employee = require('./Employees');
+const Worker = require('./Workers');
 const Customer = require('./Customer');
 const Shift = require('./Shift');
 const Services = require('./Services');
@@ -15,7 +15,7 @@ const PasswordResetToken = require('./PasswordResetToken');
 module.exports = {
   User,
   Transaction,
-  Employee,
+  Worker,
   Customer,
   Shift,
   Services,

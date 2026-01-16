@@ -40,7 +40,7 @@ export default function TabLayout() {
       <Tabs.Screen name="home" />
       <Tabs.Screen name="transactions" />
       <Tabs.Protected guard={user?.role === "admin"}>
-        <Tabs.Screen name="employees" />
+        <Tabs.Screen name="workers" />
       </Tabs.Protected>
       <Tabs.Screen name="settings" />
     </Tabs>

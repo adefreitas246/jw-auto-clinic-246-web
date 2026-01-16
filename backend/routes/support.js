@@ -86,7 +86,7 @@ router.get("/whatsnew", async (_req, res) => {
         // --- Improved ---
         {
           type: "Improved",
-          text: "Tablet layouts refined for Employees, Transactions, Settings, and other key screens in both portrait and landscape.",
+          text: "Tablet layouts refined for Workers, Transactions, Settings, and other key screens in both portrait and landscape.",
         },
         {
           type: "Improved",
@@ -146,7 +146,7 @@ router.get("/whatsnew", async (_req, res) => {
       changes: [
         {
           type: "Improved",
-          text: "Employee hourly-rate field now supports fractional values such as 9.375 per hour for more accurate pay setups.",
+          text: "Worker hourly-rate field now supports fractional values such as 9.375 per hour for more accurate pay setups.",
         },
         {
           type: "Fixed",
@@ -154,7 +154,7 @@ router.get("/whatsnew", async (_req, res) => {
         },
         {
           type: "Improved",
-          text: "UI/UX updates across the Add, Employees, and Settings tabs for a cleaner and more consistent experience.",
+          text: "UI/UX updates across the Add, Workers, and Settings tabs for a cleaner and more consistent experience.",
         },
         {
           type: "Improved",
@@ -179,7 +179,7 @@ router.get("/whatsnew", async (_req, res) => {
       version: "1.1.0",
       date: "2025-08-05",
       changes: [
-        { type: "New", text: "Employee and Shifts screens now refresh more reliably." },
+        { type: "New", text: "Worker and Shifts screens now refresh more reliably." },
       ],
     },
   ]);

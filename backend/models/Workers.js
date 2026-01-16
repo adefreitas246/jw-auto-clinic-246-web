@@ -1,4 +1,4 @@
-// models/Employees.js
+// models/Workers.js
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 
@@ -73,4 +73,4 @@ employeeSchema.methods.comparePassword = async function (enteredPassword) {
   return false;
 };
 
-module.exports = mongoose.model('Employee', employeeSchema);
+module.exports = mongoose.model('Worker', employeeSchema);
